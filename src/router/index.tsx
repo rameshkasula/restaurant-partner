@@ -34,6 +34,8 @@ const ForgotPassword = Loadable(
 )
 const ResetPassword = Loadable(lazy(() => import("@pages/auth/ResetPassword")))
 const Dashboard = Loadable(lazy(() => import("@pages/private/dashboard")))
+const Analytics = Loadable(lazy(() => import("@pages/private/analytics")))
+const Billing = Loadable(lazy(() => import("@pages/private/billing")))
 const Orders = Loadable(lazy(() => import("@pages/private/orders")))
 const MenuItems = Loadable(lazy(() => import("@pages/private/menuitems")))
 const Outlets = Loadable(lazy(() => import("@pages/private/outlets/index")))
@@ -105,6 +107,14 @@ const router = createBrowserRouter([
       {
         path: APP_PATHS.DASHBOARD,
         element: <Dashboard />,
+      },
+      {
+        path: APP_PATHS.ANALYTICS,
+        element: <Analytics />,
+      },
+      {
+        path: APP_PATHS.BILLING,
+        element: <Billing />,
       },
       {
         path: APP_PATHS.ORDERS,

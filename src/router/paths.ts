@@ -21,6 +21,7 @@ export const APP_PATHS = {
   ORDERS: "/orders",
   USERS: "/users",
   ANALYTICS: "/analytics",
+  BILLING: "/billing",
   SETTINGS: "/settings",
   REPORTS: "/reports",
   STAFF: "/staff",
