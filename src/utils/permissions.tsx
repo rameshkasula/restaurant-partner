@@ -84,6 +84,17 @@ export const NAV_ITEMS = [
     ],
   },
   {
+    label: "Billing",
+    path: APP_PATHS.BILLING,
+    icon: IconReceipt,
+    allowedRoles: [
+      ROLES.RESTAURANT_OWNER,
+      ROLES.MANAGER,
+      ROLES.POS_STAFF,
+      ROLES.KITCHEN_STAFF,
+    ],
+  },
+  {
     label: "Menu Items",
     path: APP_PATHS.MENU_ITEMS,
     icon: IconBook2,
@@ -98,7 +109,7 @@ export const NAV_ITEMS = [
     label: "Outlets",
     path: APP_PATHS.OUTLETS,
     icon: IconMapPin,
-    allowedRoles: [ROLES.RESTAURANT_OWNER, ROLES.MANAGER],
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.PLATFORM_MANAGER],
   },
   {
     label: "Users",

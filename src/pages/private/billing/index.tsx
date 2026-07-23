@@ -50,11 +50,13 @@ import { useOutlets } from "@/hooks/useOutlets"
 import { useMenuItems } from "@/hooks/useMenuItems"
 import {
   useOrders,
+  useSales,
   useCreateOrder,
   useUpdateOrder,
   useDeleteOrder,
   useRestoreOrder,
 } from "@/hooks/useOrders"
+import { Pagination } from "@/components/DataTable/Pagination"
 import {
   type Order,
   type OrderItem,
@@ -94,7 +96,9 @@ function useCurrentUserProfile() {
       if (parts.length >= 2) {
         const email = parts[0]
         const role = parts[1]
-        const match = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
+        const match = users.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase()
+        )
         if (match) {
           return {
             id: match._id || match.id,
@@ -121,11 +125,16 @@ function useCurrentUserProfile() {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const ORDER_STATUS_COLORS = {
-  [OrderStatus.PENDING]: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50",
-  [OrderStatus.PREPARING]: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50",
-  [OrderStatus.READY]: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900/50",
-  [OrderStatus.COMPLETED]: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
-  [OrderStatus.CANCELLED]: "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50",
+  [OrderStatus.PENDING]:
+    "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50",
+  [OrderStatus.PREPARING]:
+    "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50",
+  [OrderStatus.READY]:
+    "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-900/50",
+  [OrderStatus.COMPLETED]:
+    "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
+  [OrderStatus.CANCELLED]:
+    "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50",
 }
 
 const PAYMENT_MODE_ICONS = {
@@ -155,44 +164,58 @@ function ReceiptModal({ order, open, onClose, outletName }: ReceiptModalProps) {
       <DialogContent className="max-w-sm print:max-w-full print:border-none print:shadow-none">
         <DialogHeader className="print:hidden">
           <DialogTitle>Order Receipt</DialogTitle>
-          <DialogDescription>Print or view the generated customer invoice.</DialogDescription>
+          <DialogDescription>
+            Print or view the generated customer invoice.
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 font-mono text-xs border rounded-lg p-5 bg-card text-foreground shadow-sm">
+        <div className="flex flex-col gap-4 rounded-lg border bg-card p-5 font-mono text-xs text-foreground shadow-sm">
           {/* Outlet details */}
-          <div className="text-center space-y-1">
-            <h3 className="font-bold text-sm uppercase tracking-wider">{outletName}</h3>
-            <p className="text-[10px] text-muted-foreground">GSTIN: STANDALONE</p>
-            <p className="text-[10px] text-muted-foreground">Order ID: {order._id.slice(-6).toUpperCase()}</p>
+          <div className="space-y-1 text-center">
+            <h3 className="text-sm font-bold tracking-wider uppercase">
+              {outletName}
+            </h3>
+            <p className="text-[10px] text-muted-foreground">
+              GSTIN: STANDALONE
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              Order ID: {order._id.slice(-6).toUpperCase()}
+            </p>
           </div>
 
-          <div className="border-t border-dashed my-1" />
+          <div className="my-1 border-t border-dashed" />
 
           {/* Date & Status */}
           <div className="flex justify-between text-[11px]">
-            <span>Date: {new Date(order.createdAt).toLocaleString("en-IN")}</span>
+            <span>
+              Date: {new Date(order.createdAt).toLocaleString("en-IN")}
+            </span>
             <span className="font-bold uppercase">{order.status}</span>
           </div>
 
-          <div className="border-t border-dashed my-1" />
+          <div className="my-1 border-t border-dashed" />
 
           {/* Items */}
           <div className="space-y-2">
-            <div className="grid grid-cols-12 font-bold text-[10px] uppercase text-muted-foreground">
+            <div className="grid grid-cols-12 text-[10px] font-bold text-muted-foreground uppercase">
               <span className="col-span-6">Item</span>
               <span className="col-span-2 text-center">Qty</span>
               <span className="col-span-4 text-right">Price</span>
             </div>
             {order.items.map((item, idx) => (
               <div key={idx} className="grid grid-cols-12 text-[11px]">
-                <span className="col-span-6 truncate font-medium">{item.menuItemId.slice(-4).toUpperCase()} (Item)</span>
+                <span className="col-span-6 truncate font-medium">
+                  {item.menuItemId.slice(-4).toUpperCase()} (Item)
+                </span>
                 <span className="col-span-2 text-center">{item.quantity}</span>
-                <span className="col-span-4 text-right">₹{(item.price * item.quantity).toFixed(2)}</span>
+                <span className="col-span-4 text-right">
+                  ₹{(item.price * item.quantity).toFixed(2)}
+                </span>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-dashed my-1" />
+          <div className="my-1 border-t border-dashed" />
 
           {/* Calculations */}
           <div className="space-y-1 text-[11px]">
@@ -204,21 +227,23 @@ function ReceiptModal({ order, open, onClose, outletName }: ReceiptModalProps) {
               <span>Tax (5%):</span>
               <span>₹{order.bill.tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold text-sm border-t pt-1">
+            <div className="flex justify-between border-t pt-1 text-sm font-bold">
               <span>TOTAL:</span>
               <span>₹{order.bill.total.toFixed(2)}</span>
             </div>
           </div>
 
-          <div className="border-t border-dashed my-1" />
+          <div className="my-1 border-t border-dashed" />
 
           {/* Payment info */}
           <div className="flex justify-between text-[11px]">
             <span>Payment Mode:</span>
-            <span className="font-bold">{order.bill.paymentMode ?? "UNPAID"}</span>
+            <span className="font-bold">
+              {order.bill.paymentMode ?? "UNPAID"}
+            </span>
           </div>
 
-          <div className="text-center mt-3 text-[10px] text-muted-foreground italic">
+          <div className="mt-3 text-center text-[10px] text-muted-foreground italic">
             Thank you for dining with us!
           </div>
         </div>
@@ -243,11 +268,20 @@ interface EditOrderDialogProps {
   open: boolean
   onOpenChange: (o: boolean) => void
   order: Order | null
-  onSubmit: (data: { status: OrderStatus; paymentMode: PaymentMode | null }) => void
+  onSubmit: (data: {
+    status: OrderStatus
+    paymentMode: PaymentMode | null
+  }) => void
   isPending: boolean
 }
 
-function EditOrderDialog({ open, onOpenChange, order, onSubmit, isPending }: EditOrderDialogProps) {
+function EditOrderDialog({
+  open,
+  onOpenChange,
+  order,
+  onSubmit,
+  isPending,
+}: EditOrderDialogProps) {
   const { register, handleSubmit, reset } = useForm<{
     status: OrderStatus
     paymentMode: PaymentMode | ""
@@ -262,7 +296,10 @@ function EditOrderDialog({ open, onOpenChange, order, onSubmit, isPending }: Edi
     }
   }, [open, order, reset])
 
-  const onFormSubmit = (data: { status: OrderStatus; paymentMode: PaymentMode | "" }) => {
+  const onFormSubmit = (data: {
+    status: OrderStatus
+    paymentMode: PaymentMode | ""
+  }) => {
     onSubmit({
       status: data.status,
       paymentMode: data.paymentMode === "" ? null : data.paymentMode,
@@ -279,7 +316,10 @@ function EditOrderDialog({ open, onOpenChange, order, onSubmit, isPending }: Edi
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-4 py-1">
+        <form
+          onSubmit={handleSubmit(onFormSubmit)}
+          className="flex flex-col gap-4 py-1"
+        >
           {/* Status */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-status">Preparation Status</Label>
@@ -340,29 +380,54 @@ export default function Billing() {
   }, [lockedOutletId, selectedOutlet])
 
   // Menu items list for selected outlet
-  const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(activeOutletId ?? undefined)
+  const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(
+    activeOutletId ?? undefined
+  )
 
   // Filter available items only
   const availableItems = useMemo(() => {
-    return menuItems.filter((i) => !i.isDeleted && i.isAvailable && i.status === "active")
+    return menuItems.filter(
+      (i) => !i.isDeleted && i.isAvailable && i.status === "active"
+    )
   }, [menuItems])
 
   // Cart State: record of menuItemId -> quantity
   const [cart, setCart] = useState<Record<string, number>>({})
   const [paymentMode, setPaymentMode] = useState<PaymentMode>(PaymentMode.CASH)
-  const [orderStatus, setOrderStatus] = useState<OrderStatus>(OrderStatus.COMPLETED)
+  const [orderStatus, setOrderStatus] = useState<OrderStatus>(
+    OrderStatus.COMPLETED
+  )
   const [searchItem, setSearchItem] = useState("")
 
   // Invoice History State
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const { data: ordersData, isLoading: ordersLoading } = useOrders(activeOutletId ?? undefined, includeDeleted)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+
+  const { data: ordersData, isLoading: ordersLoading } = useSales(
+    page,
+    limit,
+    activeOutletId ?? undefined,
+    includeDeleted,
+    startDate || undefined,
+    endDate || undefined
+  )
   const orders = useMemo<Order[]>(() => {
     if (Array.isArray(ordersData)) return ordersData
-    if (ordersData && typeof ordersData === "object" && "data" in ordersData && Array.isArray((ordersData as any).data)) {
+    if (
+      ordersData &&
+      typeof ordersData === "object" &&
+      "data" in ordersData &&
+      Array.isArray((ordersData as any).data)
+    ) {
       return (ordersData as any).data
     }
     return []
   }, [ordersData])
+
+  const paginationMeta = ordersData?.pagination
 
   // Mutations
   const createOrderMutation = useCreateOrder()
@@ -446,14 +511,16 @@ export default function Billing() {
       toast.error("Please select a restaurant outlet first.")
       return
     }
-    const orderItems: OrderItem[] = Object.entries(cart).map(([itemId, qty]) => {
-      const item = menuMap[itemId]
-      return {
-        menuItemId: itemId,
-        quantity: qty,
-        price: item ? item.price : 0,
+    const orderItems: OrderItem[] = Object.entries(cart).map(
+      ([itemId, qty]) => {
+        const item = menuMap[itemId]
+        return {
+          menuItemId: itemId,
+          quantity: qty,
+          price: item ? item.price : 0,
+        }
       }
-    })
+    )
 
     if (orderItems.length === 0) {
       toast.error("Cart is empty.")
@@ -465,7 +532,8 @@ export default function Billing() {
       tax: billCalculations.tax,
       total: billCalculations.total,
       paymentMode: paymentMode,
-      paidAt: orderStatus === OrderStatus.COMPLETED ? new Date().toISOString() : null,
+      paidAt:
+        orderStatus === OrderStatus.COMPLETED ? new Date().toISOString() : null,
     }
 
     try {
@@ -484,7 +552,10 @@ export default function Billing() {
   }
 
   // Update order status/payment
-  const handleEditOrderSubmit = async (data: { status: OrderStatus; paymentMode: PaymentMode | null }) => {
+  const handleEditOrderSubmit = async (data: {
+    status: OrderStatus
+    paymentMode: PaymentMode | null
+  }) => {
     if (!editOrder) return
     try {
       await updateOrderMutation.mutateAsync({
@@ -493,7 +564,10 @@ export default function Billing() {
           status: data.status,
           bill: {
             paymentMode: data.paymentMode,
-            paidAt: data.status === OrderStatus.COMPLETED ? new Date().toISOString() : editOrder.bill.paidAt,
+            paidAt:
+              data.status === OrderStatus.COMPLETED
+                ? new Date().toISOString()
+                : editOrder.bill.paidAt,
           },
         },
       })
@@ -531,14 +605,17 @@ export default function Billing() {
     i.name.toLowerCase().includes(searchItem.toLowerCase())
   )
 
-  const activeOutletName = outletMap[activeOutletId ?? ""] || "Restaurant Outlet"
+  const activeOutletName =
+    outletMap[activeOutletId ?? ""] || "Restaurant Outlet"
 
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* ── Outlet Selection Header ── */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4">
+      <div className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Billing Dashboard</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            Billing Dashboard
+          </h1>
           <p className="text-xs text-muted-foreground">
             Place new orders and review transaction history.
           </p>
@@ -547,13 +624,17 @@ export default function Billing() {
         {/* Outlet selector */}
         {!lockedOutletId && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Billing Outlet:</span>
+            <span className="text-xs text-muted-foreground">
+              Billing Outlet:
+            </span>
             <NativeSelect
               value={selectedOutlet}
               onChange={(e) => setSelectedOutlet(e.target.value)}
-              className="h-9 text-xs min-w-[160px]"
+              className="h-9 min-w-[160px] text-xs"
             >
-              <NativeSelectOption value="ALL">— Choose Outlet —</NativeSelectOption>
+              <NativeSelectOption value="ALL">
+                — Choose Outlet —
+              </NativeSelectOption>
               {outlets
                 .filter((o) => !o.deletedAt)
                 .map((o) => (
@@ -567,21 +648,22 @@ export default function Billing() {
       </div>
 
       {!activeOutletId ? (
-        <Alert className="max-w-md mx-auto my-12">
+        <Alert className="mx-auto my-12 max-w-md">
           <IconAlertCircle className="size-4" />
           <AlertDescription>
-            Please select an outlet from the top filter to load the Billing System.
+            Please select an outlet from the top filter to load the Billing
+            System.
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-12 items-start">
+        <div className="grid items-start gap-6 lg:grid-cols-12">
           {/* ── Left Column: POS Menu Catalog (7 Cols) ── */}
           <div className="flex flex-col gap-4 lg:col-span-7">
             <Card className="shadow-sm">
               <CardContent className="pt-6">
-                <div className="flex items-center gap-3 border-b pb-4 mb-4">
+                <div className="mb-4 flex items-center gap-3 border-b pb-4">
                   <div className="relative flex-1">
-                    <IconSearch className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <IconSearch className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       placeholder="Search menu catalogue..."
                       className="pl-9"
@@ -598,26 +680,28 @@ export default function Billing() {
                     ))}
                   </div>
                 ) : filteredMenuItems.length === 0 ? (
-                  <div className="py-16 text-center text-muted-foreground flex flex-col items-center gap-2">
+                  <div className="flex flex-col items-center gap-2 py-16 text-center text-muted-foreground">
                     <IconChefHat className="size-8 opacity-25" />
-                    <p className="text-xs">No items available in this outlet menu.</p>
+                    <p className="text-xs">
+                      No items available in this outlet menu.
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 max-h-[360px] overflow-y-auto pr-1">
+                  <div className="grid max-h-[360px] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
                     {filteredMenuItems.map((item) => (
                       <button
                         key={item._id}
                         onClick={() => addToCart(item._id)}
-                        className="flex flex-col justify-between items-start text-left border rounded-lg p-3 hover:bg-muted/40 transition-colors cursor-pointer group"
+                        className="group flex cursor-pointer flex-col items-start justify-between rounded-lg border p-3 text-left transition-colors hover:bg-muted/40"
                       >
-                        <span className="font-semibold text-xs text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                        <span className="line-clamp-2 text-xs font-semibold text-foreground transition-colors group-hover:text-primary">
                           {item.name}
                         </span>
-                        <div className="flex justify-between items-center w-full mt-3 border-t pt-2 border-dashed border-border">
-                          <span className="font-bold text-xs text-foreground">
+                        <div className="mt-3 flex w-full items-center justify-between border-t border-dashed border-border pt-2">
+                          <span className="text-xs font-bold text-foreground">
                             ₹{item.price.toFixed(2)}
                           </span>
-                          <span className="text-[10px] text-muted-foreground font-medium">
+                          <span className="text-[10px] font-medium text-muted-foreground">
                             {item.stock} left
                           </span>
                         </div>
@@ -631,57 +715,71 @@ export default function Billing() {
 
           {/* ── Right Column: Cart / Checkout Pane (5 Cols) ── */}
           <div className="flex flex-col gap-4 lg:col-span-5">
-            <Card className="shadow-sm border-primary/20 dark:border-primary/30">
-              <CardContent className="pt-6 flex flex-col gap-4">
+            <Card className="border-primary/20 shadow-sm dark:border-primary/30">
+              <CardContent className="flex flex-col gap-4 pt-6">
                 <div className="flex items-center justify-between border-b pb-3">
-                  <div className="flex items-center gap-2 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-sm font-bold">
                     <IconShoppingCart className="size-4 text-primary" />
                     <span>Cart Summary</span>
                   </div>
                   {Object.keys(cart).length > 0 && (
-                    <Button variant="ghost" size="xs" onClick={clearCart} className="text-xs text-destructive hover:bg-destructive/10">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      onClick={clearCart}
+                      className="text-xs text-destructive hover:bg-destructive/10"
+                    >
                       Clear Cart
                     </Button>
                   )}
                 </div>
 
                 {/* Selected Items */}
-                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
+                <div className="max-h-[200px] space-y-3 overflow-y-auto pr-1">
                   {Object.keys(cart).length === 0 ? (
-                    <div className="py-12 text-center text-muted-foreground flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
                       <IconShoppingCart className="size-8 opacity-25" />
-                      <p className="text-xs">Cart is empty. Click menu items to add.</p>
+                      <p className="text-xs">
+                        Cart is empty. Click menu items to add.
+                      </p>
                     </div>
                   ) : (
                     Object.entries(cart).map(([itemId, qty]) => {
                       const item = menuMap[itemId]
                       if (!item) return null
                       return (
-                        <div key={itemId} className="flex justify-between items-center text-xs">
-                          <div className="flex flex-col gap-0.5 max-w-[160px]">
-                            <span className="font-semibold text-foreground truncate">{item.name}</span>
-                            <span className="text-[10px] text-muted-foreground">₹{item.price.toFixed(2)} each</span>
+                        <div
+                          key={itemId}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <div className="flex max-w-[160px] flex-col gap-0.5">
+                            <span className="truncate font-semibold text-foreground">
+                              {item.name}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              ₹{item.price.toFixed(2)} each
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-2.5">
-                            <div className="flex items-center border rounded-md overflow-hidden bg-background">
+                            <div className="flex items-center overflow-hidden rounded-md border bg-background">
                               <button
                                 onClick={() => removeFromCart(itemId)}
-                                className="px-1.5 py-1 hover:bg-muted text-muted-foreground"
+                                className="px-1.5 py-1 text-muted-foreground hover:bg-muted"
                               >
                                 <IconMinus className="size-3" />
                               </button>
-                              <span className="px-2 text-xs font-bold font-mono min-w-[20px] text-center">
+                              <span className="min-w-[20px] px-2 text-center font-mono text-xs font-bold">
                                 {qty}
                               </span>
                               <button
                                 onClick={() => addToCart(itemId)}
-                                className="px-1.5 py-1 hover:bg-muted text-muted-foreground"
+                                className="px-1.5 py-1 text-muted-foreground hover:bg-muted"
                               >
                                 <IconPlus className="size-3" />
                               </button>
                             </div>
-                            <span className="font-bold min-w-[60px] text-right">
+                            <span className="min-w-[60px] text-right font-bold">
                               ₹{(item.price * qty).toFixed(2)}
                             </span>
                           </div>
@@ -691,16 +789,20 @@ export default function Billing() {
                   )}
                 </div>
 
-                <div className="border-t pt-4 space-y-2">
+                <div className="space-y-2 border-t pt-4">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Subtotal:</span>
-                    <span className="font-medium">₹{billCalculations.subtotal.toFixed(2)}</span>
+                    <span className="font-medium">
+                      ₹{billCalculations.subtotal.toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Tax (5%):</span>
-                    <span className="font-medium">₹{billCalculations.tax.toFixed(2)}</span>
+                    <span className="font-medium">
+                      ₹{billCalculations.tax.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex justify-between font-bold text-sm border-t pt-2">
+                  <div className="flex justify-between border-t pt-2 text-sm font-bold">
                     <span>Grand Total:</span>
                     <span>₹{billCalculations.total.toFixed(2)}</span>
                   </div>
@@ -708,15 +810,22 @@ export default function Billing() {
 
                 {/* Checkout config */}
                 {Object.keys(cart).length > 0 && (
-                  <div className="border-t pt-4 space-y-3">
+                  <div className="space-y-3 border-t pt-4">
                     <div className="grid grid-cols-2 gap-3">
                       {/* Payment Mode */}
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="cart-payment" className="text-xs font-semibold">Payment Mode</Label>
+                        <Label
+                          htmlFor="cart-payment"
+                          className="text-xs font-semibold"
+                        >
+                          Payment Mode
+                        </Label>
                         <NativeSelect
                           id="cart-payment"
                           value={paymentMode}
-                          onChange={(e) => setPaymentMode(e.target.value as PaymentMode)}
+                          onChange={(e) =>
+                            setPaymentMode(e.target.value as PaymentMode)
+                          }
                           className="h-8 text-xs"
                         >
                           {Object.values(PaymentMode).map((pm) => (
@@ -729,11 +838,18 @@ export default function Billing() {
 
                       {/* Status */}
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor="cart-status" className="text-xs font-semibold">Order Status</Label>
+                        <Label
+                          htmlFor="cart-status"
+                          className="text-xs font-semibold"
+                        >
+                          Order Status
+                        </Label>
                         <NativeSelect
                           id="cart-status"
                           value={orderStatus}
-                          onChange={(e) => setOrderStatus(e.target.value as OrderStatus)}
+                          onChange={(e) =>
+                            setOrderStatus(e.target.value as OrderStatus)
+                          }
                           className="h-8 text-xs"
                         >
                           {Object.values(OrderStatus).map((os) => (
@@ -747,7 +863,7 @@ export default function Billing() {
 
                     <Button
                       onClick={handlePlaceOrder}
-                      className="w-full mt-2 gap-1.5 font-semibold text-xs"
+                      className="mt-2 w-full gap-1.5 text-xs font-semibold"
                       disabled={createOrderMutation.isPending}
                     >
                       {createOrderMutation.isPending ? (
@@ -769,21 +885,40 @@ export default function Billing() {
       {activeOutletId && (
         <Card className="shadow-sm">
           <CardContent className="pt-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4 mb-4">
+            <div className="mb-4 flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-2">
                 <IconFileText className="size-4 text-primary" />
-                <span className="font-bold text-sm">Past Orders & Invoices</span>
+                <span className="text-sm font-bold">
+                  Past Orders & Invoices
+                </span>
               </div>
 
-              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={includeDeleted}
-                  onChange={(e) => setIncludeDeleted(e.target.checked)}
-                  className="rounded border-muted-foreground text-primary focus:ring-primary"
-                />
-                Include Deleted Bills
-              </label>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 text-xs">
+                  <Input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={e => { setStartDate(e.target.value); setPage(1); }} 
+                    className="h-8 text-xs w-[130px]" 
+                  />
+                  <span className="text-muted-foreground">to</span>
+                  <Input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={e => { setEndDate(e.target.value); setPage(1); }} 
+                    className="h-8 text-xs w-[130px]" 
+                  />
+                </div>
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground select-none">
+                  <input
+                    type="checkbox"
+                    checked={includeDeleted}
+                    onChange={(e) => { setIncludeDeleted(e.target.checked); setPage(1); }}
+                    className="rounded border-muted-foreground text-primary focus:ring-primary"
+                  />
+                  Include Deleted
+                </label>
+              </div>
             </div>
 
             {ordersLoading ? (
@@ -793,12 +928,14 @@ export default function Billing() {
                 ))}
               </div>
             ) : orders.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
                 <IconFileText className="size-8 opacity-25" />
-                <p className="text-xs">No orders processed yet for this outlet.</p>
+                <p className="text-xs">
+                  No orders processed yet for this outlet.
+                </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto space-y-4">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -815,10 +952,15 @@ export default function Billing() {
                     {orders.map((ord) => {
                       const ordId = ord._id || ord.id || ""
                       const deleted = ord.isDeleted
-                      const paymentIcon = ord.bill.paymentMode ? PAYMENT_MODE_ICONS[ord.bill.paymentMode] : null
+                      const paymentIcon = ord.bill.paymentMode
+                        ? PAYMENT_MODE_ICONS[ord.bill.paymentMode]
+                        : null
 
                       return (
-                        <TableRow key={ordId} className={cn(deleted && "opacity-55")}>
+                        <TableRow
+                          key={ordId}
+                          className={cn(deleted && "opacity-55")}
+                        >
                           {/* Order ID */}
                           <TableCell className="font-mono text-xs font-semibold text-primary">
                             #{ordId.slice(-6).toUpperCase()}
@@ -839,11 +981,15 @@ export default function Billing() {
 
                           {/* Items Count */}
                           <TableCell className="text-xs font-medium">
-                            {ord.items.reduce((acc, curr) => acc + curr.quantity, 0)} items
+                            {ord.items.reduce(
+                              (acc, curr) => acc + curr.quantity,
+                              0
+                            )}{" "}
+                            items
                           </TableCell>
 
                           {/* Bill Amount */}
-                          <TableCell className="font-bold text-sm">
+                          <TableCell className="text-sm font-bold">
                             ₹{ord.bill.total.toFixed(2)}
                           </TableCell>
 
@@ -855,13 +1001,20 @@ export default function Billing() {
                                 {ord.bill.paymentMode}
                               </span>
                             ) : (
-                              <span className="text-xs italic text-muted-foreground">Unpaid</span>
+                              <span className="text-xs text-muted-foreground italic">
+                                Unpaid
+                              </span>
                             )}
                           </TableCell>
 
                           {/* Status */}
                           <TableCell>
-                            <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border", ORDER_STATUS_COLORS[ord.status])}>
+                            <span
+                              className={cn(
+                                "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase",
+                                ORDER_STATUS_COLORS[ord.status]
+                              )}
+                            >
                               {ord.status}
                             </span>
                           </TableCell>
@@ -914,6 +1067,20 @@ export default function Billing() {
                     })}
                   </TableBody>
                 </Table>
+                
+                {paginationMeta && orders.length > 0 && (
+                  <Pagination
+                    currentPage={paginationMeta.page}
+                    totalPages={paginationMeta.totalPages}
+                    pageSize={paginationMeta.limit}
+                    totalEntries={paginationMeta.total}
+                    onPageChange={(p) => setPage(p)}
+                    onPageSizeChange={(s) => {
+                      setLimit(s)
+                      setPage(1)
+                    }}
+                  />
+                )}
               </div>
             )}
           </CardContent>

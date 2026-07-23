@@ -1,10 +1,2 @@
-export default function Orders() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Orders Page</h1>
-      <p className="mt-2 text-muted-foreground">
-        This is the Orders page. You can add components and build it out.
-      </p>
-    </div>
-  )
-}
+import LiveOrders from "./liveorders"
+export default LiveOrders
