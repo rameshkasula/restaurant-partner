@@ -355,7 +355,14 @@ export default function Billing() {
 
   // Invoice History State
   const [includeDeleted, setIncludeDeleted] = useState(false)
-  const { data: orders = [], isLoading: ordersLoading } = useOrders(activeOutletId ?? undefined, includeDeleted)
+  const { data: ordersData, isLoading: ordersLoading } = useOrders(activeOutletId ?? undefined, includeDeleted)
+  const orders = useMemo<Order[]>(() => {
+    if (Array.isArray(ordersData)) return ordersData
+    if (ordersData && typeof ordersData === "object" && "data" in ordersData && Array.isArray((ordersData as any).data)) {
+      return (ordersData as any).data
+    }
+    return []
+  }, [ordersData])
 
   // Mutations
   const createOrderMutation = useCreateOrder()

@@ -59,12 +59,14 @@ export interface UpdateOrderDto {
 }
 
 export const orderApi = {
-  list: (outletId?: string, includeDeleted = false) => {
+  list: (outletId?: string, includeDeleted = false, startDate?: string, endDate?: string) => {
     const params = new URLSearchParams()
     if (outletId) params.append("outletId", outletId)
     if (includeDeleted) params.append("includeDeleted", "true")
+    if (startDate) params.append("startDate", startDate)
+    if (endDate) params.append("endDate", endDate)
     const query = params.toString() ? `?${params.toString()}` : ""
-    return axiosInstance.get<Order[]>(`/order${query}`).then((r) => r.data)
+    return axiosInstance.get<any>(`/order${query}`).then((r) => r.data)
   },
   create: (data: CreateOrderDto) =>
     axiosInstance.post<Order>("/order", data).then((r) => r.data),

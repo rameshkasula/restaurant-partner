@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react"
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { getAccessToken } from "@/utils/tokens"
 import PrivateLayout from "@/components/PrivateLayout"
+import GlobalErrorBoundary from "@/components/GlobalErrorBoundary"
 import { APP_PATHS } from "./paths"
 
 // A Loadable HOC to wrap lazy components with Suspense and a loading spinner
@@ -63,46 +64,57 @@ const router = createBrowserRouter([
   {
     path: APP_PATHS.HOME,
     element: <Home />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.REQUEST,
     element: <Register />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.LOGIN,
     element: <Login />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.FORGOT_PASSWORD,
     element: <ForgotPassword />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.RESET_PASSWORD,
     element: <ResetPassword />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.PRIVACY_POLICY,
     element: <PrivacyPolicy />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.TERMS_OF_SERVICE,
     element: <TermsOfService />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.COOKIE_POLICY,
     element: <CookiePolicy />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.BLOGS,
     element: <Blogs />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.CAREERS,
     element: <Careers />,
+    errorElement: <GlobalErrorBoundary />,
   },
   {
     path: APP_PATHS.HOME,
     element: <ProtectedRoute />,
+    errorElement: <GlobalErrorBoundary />,
     children: [
       {
         path: APP_PATHS.DASHBOARD,

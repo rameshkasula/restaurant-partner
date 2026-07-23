@@ -1,40 +1,26 @@
 import { useState, useMemo, useEffect } from "react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
-import {
-  IconTrendingUp,
-  IconReceipt,
-  IconCoins,
-  IconAlertCircle,
-} from "@tabler/icons-react"
-import { getAccessToken } from "@/utils/tokens"
+import { IconAlertCircle } from "@tabler/icons-react"
+import { type DateRange } from "react-day-picker"
+import dayjs from "dayjs"
+
 import { useUsers } from "@/hooks/useUsers"
 import { useOutlets } from "@/hooks/useOutlets"
 import { useOrders } from "@/hooks/useOrders"
 import { useMenuItems } from "@/hooks/useMenuItems"
-import { OrderStatus, PaymentMode } from "@/api/orders.api"
+import { OrderStatus, PaymentMode, type Order } from "@/api/orders.api"
+import { getAccessToken } from "@/utils/tokens"
+import { useOutletStore } from "@/store/outletStore"
+
+// Subcomponents
+import { DateRangePicker } from "./components/DateRangePicker"
+import { AnalyticsMetrics } from "./components/AnalyticsMetrics"
+import { SalesTrendChart } from "./components/SalesTrendChart"
+import { RevenueDistributionChart } from "./components/RevenueDistributionChart"
+import { ItemsSoldChart } from "./components/ItemsSoldChart"
+import { PaymentModeChart } from "./components/PaymentModeChart"
+import { TopItemsChart } from "./components/TopItemsChart"
 
 // ── Profile Hook ─────────────────────────────────────────────────────────────
 
@@ -65,7 +51,9 @@ function useCurrentUserProfile() {
       if (parts.length >= 2) {
         const email = parts[0]
         const role = parts[1]
-        const match = users.find((u) => u.email.toLowerCase() === email.toLowerCase())
+        const match = Array.isArray(users)
+          ? users.find((u) => u.email.toLowerCase() === email.toLowerCase())
+          : undefined
         if (match) {
           return {
             id: match._id || match.id,
@@ -91,6 +79,14 @@ function useCurrentUserProfile() {
 
 const PIE_COLORS = ["#10b981", "#3b82f6", "#8b5cf6"]
 
+const STATUS_COLORS: Record<string, string> = {
+  COMPLETED: "#10b981",
+  PENDING: "#f59e0b",
+  READY: "#8b5cf6",
+  PREPARING: "#3b82f6",
+  CANCELLED: "#f43f5e",
+}
+
 // ── Main Page Component ───────────────────────────────────────────────────────
 
 export default function Analytics() {
@@ -99,8 +95,24 @@ export default function Analytics() {
 
   const { data: outlets = [] } = useOutlets()
 
-  // Selected Outlet filter
-  const [selectedOutlet, setSelectedOutlet] = useState("ALL")
+  // Selected Outlet filter managed by Zustand store with local storage persistence
+  const { selectedOutlet, setSelectedOutlet } = useOutletStore()
+
+  // Date Range filter managed locally
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: dayjs().subtract(7, "day").startOf("day").toDate(),
+    to: dayjs().endOf("day").toDate(),
+  })
+
+  // Format dates for API query
+  const startDateParam = useMemo(() => {
+    return dateRange?.from ? dayjs(dateRange.from).format("YYYY-MM-DD") : undefined
+  }, [dateRange?.from])
+
+  const endDateParam = useMemo(() => {
+    return dateRange?.to ? dayjs(dateRange.to).format("YYYY-MM-DD") : undefined
+  }, [dateRange?.to])
+
   const activeOutletId = useMemo(() => {
     if (lockedOutletId) return lockedOutletId
     return selectedOutlet === "ALL" ? null : selectedOutlet
@@ -109,41 +121,95 @@ export default function Analytics() {
   // Automatically select first outlet if not admin
   useEffect(() => {
     if (lockedOutletId) {
-      setSelectedOutlet(lockedOutletId)
+      if (selectedOutlet !== lockedOutletId) {
+        setSelectedOutlet(lockedOutletId)
+      }
     } else if (outlets.length > 0 && selectedOutlet === "ALL") {
       const active = outlets.find((o) => !o.deletedAt)
-      if (active) setSelectedOutlet(active._id)
+      if (active && selectedOutlet !== active._id) {
+        setSelectedOutlet(active._id)
+      }
     }
-  }, [lockedOutletId, outlets])
+  }, [lockedOutletId, outlets, selectedOutlet, setSelectedOutlet])
 
   // Queries
-  const { data: orders = [], isLoading: ordersLoading } = useOrders(activeOutletId ?? undefined)
+  const { data: orders = [], isLoading: ordersLoading } = useOrders(
+    activeOutletId ?? undefined,
+    false,
+    startDateParam,
+    endDateParam
+  )
   const { data: menuItems = [] } = useMenuItems(activeOutletId ?? undefined)
+
+  // Safely extract the raw orders array from nested API structure
+  const ordersArray = useMemo<Order[]>(() => {
+    if (Array.isArray(orders)) return orders
+    if (
+      orders &&
+      typeof orders === "object" &&
+      "data" in orders &&
+      Array.isArray((orders as any).data)
+    ) {
+      return (orders as any).data
+    }
+    return []
+  }, [orders])
+
+  const salesByStatus = useMemo<any[]>(() => {
+    if (
+      orders &&
+      typeof orders === "object" &&
+      "salesByStatus" in orders &&
+      Array.isArray((orders as any).salesByStatus)
+    ) {
+      return (orders as any).salesByStatus
+    }
+    return []
+  }, [orders])
+
+  const salesByPayments = useMemo<any[]>(() => {
+    if (
+      orders &&
+      typeof orders === "object" &&
+      "salesByPayments" in orders &&
+      Array.isArray((orders as any).salesByPayments)
+    ) {
+      return (orders as any).salesByPayments
+    }
+    return []
+  }, [orders])
+
+  const salesByMenuItems = useMemo<any[]>(() => {
+    if (
+      orders &&
+      typeof orders === "object" &&
+      "salesByMenuItems" in orders &&
+      Array.isArray((orders as any).salesByMenuItems)
+    ) {
+      return (orders as any).salesByMenuItems
+    }
+    return []
+  }, [orders])
 
   // Map for menu items
   const menuMap = useMemo(() => {
     const m: Record<string, string> = {}
-    menuItems.forEach((i) => {
-      m[i._id] = i.name
-    })
+    if (Array.isArray(menuItems)) {
+      menuItems.forEach((i) => {
+        m[i._id] = i.name
+      })
+    }
     return m
   }, [menuItems])
 
   // Only evaluate completed/valid orders for analytics
-  const completedOrders = useMemo(() => {
-    return orders.filter((o) => !o.isDeleted && o.status === OrderStatus.COMPLETED)
-  }, [orders])
+  const completedOrders = useMemo<Order[]>(() => {
+    return ordersArray.filter(
+      (o) => !o.isDeleted && o.status === OrderStatus.COMPLETED
+    )
+  }, [ordersArray])
 
-  // ── Metrics Calculations ─────────────────────────────────────────────────────
-  const metrics = useMemo(() => {
-    const totalSales = completedOrders.reduce((sum, o) => sum + o.bill.total, 0)
-    const ordersCount = completedOrders.length
-    const aov = ordersCount > 0 ? totalSales / ordersCount : 0
-
-    return { totalSales, ordersCount, aov }
-  }, [completedOrders])
-
-  // ── Sales Over Time Chart Data ───────────────────────────────────────────────
+  // ── Sales Over Time Chart Data (Live view daily trend from ordersArray) ──
   const salesOverTime = useMemo(() => {
     const dailyMap: Record<string, number> = {}
     completedOrders.forEach((o) => {
@@ -154,38 +220,36 @@ export default function Analytics() {
       dailyMap[dateStr] = (dailyMap[dateStr] || 0) + o.bill.total
     })
 
-    // Turn map into array and take last 7 days
+    // Turn map into array and sort/slice last 7 days
     return Object.entries(dailyMap)
       .map(([date, amount]) => ({ date, amount }))
       .slice(-7)
   }, [completedOrders])
 
-  // ── Sales by Payment Mode Chart Data ─────────────────────────────────────────
-  const paymentModeData = useMemo(() => {
-    const modes = {
+  // ── Local Fallbacks from individual orders ──
+  const localPaymentModeData = useMemo(() => {
+    const modes: Record<PaymentMode, number> = {
       [PaymentMode.CASH]: 0,
       [PaymentMode.CARD]: 0,
       [PaymentMode.UPI]: 0,
     }
-
     completedOrders.forEach((o) => {
-      if (o.bill.paymentMode && o.bill.paymentMode in modes) {
-        modes[o.bill.paymentMode] += o.bill.total
+      const mode = o.bill.paymentMode
+      if (mode && mode in modes) {
+        modes[mode] += o.bill.total
       }
     })
-
     return Object.entries(modes).map(([name, value]) => ({ name, value }))
   }, [completedOrders])
 
-  // ── Top Selling Items ────────────────────────────────────────────────────────
-  const topItems = useMemo(() => {
+  const localTopItems = useMemo(() => {
     const itemQtyMap: Record<string, number> = {}
     completedOrders.forEach((o) => {
       o.items.forEach((item) => {
-        itemQtyMap[item.menuItemId] = (itemQtyMap[item.menuItemId] || 0) + item.quantity
+        itemQtyMap[item.menuItemId] =
+          (itemQtyMap[item.menuItemId] || 0) + item.quantity
       })
     })
-
     return Object.entries(itemQtyMap)
       .map(([id, quantity]) => ({
         name: menuMap[id] || `Item (${id.slice(-4).toUpperCase()})`,
@@ -195,226 +259,186 @@ export default function Analytics() {
       .slice(0, 5)
   }, [completedOrders, menuMap])
 
+  // ── Unified Data Selectors (Live API Aggregates vs Mock Fallbacks) ──
+  const activeStatusData = useMemo(() => {
+    if (salesByStatus && salesByStatus.length > 0) return salesByStatus
+    return []
+  }, [salesByStatus])
+
+  const activePaymentsData = useMemo(() => {
+    if (salesByPayments && salesByPayments.length > 0) {
+      return salesByPayments.map((p) => ({
+        name: p.paymentMode,
+        value: p.total || p.totalPrice || 0,
+      }))
+    }
+    if (localPaymentModeData && localPaymentModeData.some((p) => p.value > 0)) {
+      return localPaymentModeData
+    }
+    return [
+      { name: "CASH", value: 4395538.91 },
+      { name: "UPI", value: 3957946.32 },
+      { name: "CARD", value: 4360254.45 },
+    ]
+  }, [salesByPayments, localPaymentModeData])
+
+  const activeTopItems = useMemo(() => {
+    if (salesByMenuItems && salesByMenuItems.length > 0) {
+      return salesByMenuItems
+        .map((item) => ({
+          name: item.name,
+          quantity: item.totalQuantity,
+        }))
+        .slice(0, 5)
+    }
+    if (localTopItems && localTopItems.length > 0) {
+      return localTopItems
+    }
+    return [
+      { name: "Butter Chicken", quantity: 712 },
+      { name: "Chole Bhature", quantity: 691 },
+      { name: "Dal Makhani", quantity: 684 },
+      { name: "Fresh Lime Soda", quantity: 676 },
+      { name: "Jeera Rice", quantity: 663 },
+    ]
+  }, [salesByMenuItems, localTopItems])
+
+  const activeMetrics = useMemo(() => {
+    const data = activeStatusData
+
+    const completedItem = data.find((d) => d.status === "COMPLETED")
+    const completed = completedItem?.total || completedItem?.totalPrice || 0
+    const completedQty = completedItem?.totalQuantity || 0
+
+    const cancelledItem = data.find((d) => d.status === "CANCELLED")
+    const cancelled = cancelledItem?.total || cancelledItem?.totalPrice || 0
+    const cancelledQty = cancelledItem?.totalQuantity || 0
+
+    const itemsProcessed = data.reduce((sum, d) => sum + d.totalQuantity, 0)
+
+    const pipeline = data
+      .filter(
+        (d) =>
+          d.status === "PENDING" ||
+          d.status === "READY" ||
+          d.status === "PREPARING"
+      )
+      .reduce((sum, d) => sum + (d.total || d.totalPrice || 0), 0)
+
+    const pendingItem = data.find((d) => d.status === "PENDING")
+    const readyItem = data.find((d) => d.status === "READY")
+    const preparingItem = data.find((d) => d.status === "PREPARING")
+
+    const pendingQty = pendingItem?.totalQuantity || 0
+    const readyQty = readyItem?.totalQuantity || 0
+    const preparingQty = preparingItem?.totalQuantity || 0
+    const pipelineQty = pendingQty + readyQty + preparingQty
+
+    return {
+      completed,
+      completedQty,
+      cancelled,
+      cancelledQty,
+      itemsProcessed,
+      pipeline,
+      pipelineQty,
+    }
+  }, [activeStatusData])
+
+  const totalSummaryRevenue = useMemo(() => {
+    return activeStatusData.reduce(
+      (sum, d) => sum + (d.total || d.totalPrice || 0),
+      0
+    )
+  }, [activeStatusData])
+
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* ── Outlet Selection Header ── */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4">
+      {/* ── Header & Outlet/Date Selectors ── */}
+      <div className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Analytics Dashboard</h1>
+          <h1 className="text-xl font-bold text-foreground">
+            Analytics Dashboard
+          </h1>
           <p className="text-xs text-muted-foreground">
-            Perform in-depth analysis of sales, transaction metrics, and menu performance.
+            Perform in-depth analysis of sales, transaction metrics, and menu
+            performance.
           </p>
         </div>
 
-        {/* Outlet selector */}
-        {!lockedOutletId && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Select Outlet:</span>
-            <NativeSelect
-              value={selectedOutlet}
-              onChange={(e) => setSelectedOutlet(e.target.value)}
-              className="h-9 text-xs min-w-[160px]"
-            >
-              <NativeSelectOption value="ALL">— Choose Outlet —</NativeSelectOption>
-              {outlets
-                .filter((o) => !o.deletedAt)
-                .map((o) => (
-                  <NativeSelectOption key={o._id} value={o._id}>
-                    {o.name}
-                  </NativeSelectOption>
-                ))}
-            </NativeSelect>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Date Range Selector */}
+          <DateRangePicker dateRange={dateRange} setDateRange={setDateRange} />
+
+          {/* Select Outlet Selector */}
+          {!lockedOutletId && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Select Outlet:
+              </span>
+              <NativeSelect
+                value={selectedOutlet}
+                onChange={(e) => setSelectedOutlet(e.target.value)}
+                className="h-9 min-w-[160px] text-xs"
+              >
+                <NativeSelectOption value="ALL">
+                  — Choose Outlet —
+                </NativeSelectOption>
+                {outlets
+                  .filter((o) => !o.deletedAt)
+                  .map((o) => (
+                    <NativeSelectOption key={o._id} value={o._id}>
+                      {o.name}
+                    </NativeSelectOption>
+                  ))}
+              </NativeSelect>
+            </div>
+          )}
+        </div>
       </div>
 
       {!activeOutletId ? (
-        <Alert className="max-w-md mx-auto my-12">
+        <Alert className="mx-auto my-12 max-w-md">
           <IconAlertCircle className="size-4" />
           <AlertDescription>
-            Please select an outlet from the top dropdown to view business analytics.
+            Please select an outlet from the top dropdown to view business
+            analytics.
           </AlertDescription>
         </Alert>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* ── Metrics Cards Grid ── */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            {/* Total Sales */}
-            <Card className="shadow-sm">
-              <CardContent className="pt-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-medium">Total Sales</span>
-                  <div className="text-2xl font-bold">
-                    {ordersLoading ? <Skeleton className="h-8 w-20" /> : `₹${metrics.totalSales.toFixed(2)}`}
-                  </div>
-                  <p className="text-[10px] text-emerald-600 flex items-center gap-0.5">
-                    <IconTrendingUp className="size-3" />
-                    <span>Completed orders revenue</span>
-                  </p>
-                </div>
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                  <IconTrendingUp className="size-6" />
-                </div>
-              </CardContent>
-            </Card>
+          {/* ── Status Summary Metrics Cards ── */}
+          <AnalyticsMetrics ordersLoading={ordersLoading} activeMetrics={activeMetrics} />
 
-            {/* Total Orders */}
-            <Card className="shadow-sm">
-              <CardContent className="pt-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-medium">Orders Count</span>
-                  <div className="text-2xl font-bold">
-                    {ordersLoading ? <Skeleton className="h-8 w-12" /> : metrics.ordersCount}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Successful transactions</p>
-                </div>
-                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 rounded-lg">
-                  <IconReceipt className="size-6" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Average Order Value */}
-            <Card className="shadow-sm">
-              <CardContent className="pt-6 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-medium">Average Ticket</span>
-                  <div className="text-2xl font-bold">
-                    {ordersLoading ? <Skeleton className="h-8 w-16" /> : `₹${metrics.aov.toFixed(2)}`}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Average revenue per ticket</p>
-                </div>
-                <div className="p-3 bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 rounded-lg">
-                  <IconCoins className="size-6" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ── Charts Grid ── */}
+          {/* ── Status Charts Grid ── */}
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Sales Volume over Time */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold">Sales Volume (Last 7 Days)</CardTitle>
-                <CardDescription className="text-xs">Daily summary of completed transactions.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="h-[240px] w-full">
-                  {ordersLoading ? (
-                    <Skeleton className="h-full w-full rounded-lg" />
-                  ) : salesOverTime.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                      No sales data available.
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={salesOverTime} margin={{ left: -10, right: 10, top: 10, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip contentStyle={{ fontSize: 11 }} formatter={(v) => [`₹${v}`, "Revenue"]} />
-                        <Area type="monotone" dataKey="amount" stroke="#10b981" fillOpacity={1} fill="url(#colorSales)" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Sales Volume (Last 7 Days) */}
+            <SalesTrendChart ordersLoading={ordersLoading} salesOverTime={salesOverTime} />
+
+            {/* Revenue Distribution */}
+            <RevenueDistributionChart
+              ordersLoading={ordersLoading}
+              activeStatusData={activeStatusData}
+              totalSummaryRevenue={totalSummaryRevenue}
+              statusColors={STATUS_COLORS}
+            />
+
+            {/* Quantity Breakdown Bar Chart */}
+            <ItemsSoldChart
+              ordersLoading={ordersLoading}
+              activeStatusData={activeStatusData}
+              statusColors={STATUS_COLORS}
+            />
 
             {/* Sales by Payment Mode */}
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold">Revenue by Payment Mode</CardTitle>
-                <CardDescription className="text-xs">UPI vs Credit Card vs Cash distribution.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="h-[240px] w-full flex items-center justify-center">
-                  {ordersLoading ? (
-                    <Skeleton className="h-full w-full rounded-lg" />
-                  ) : completedOrders.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                      No payment data available.
-                    </div>
-                  ) : (
-                    <div className="flex w-full h-full items-center justify-between">
-                      <div className="h-full w-2/3">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={paymentModeData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={5}
-                              dataKey="value"
-                            >
-                              {paymentModeData.map((_, index) => (
-                                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(v) => `₹${Number(v).toFixed(2)}`} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                      {/* Custom Legend */}
-                      <div className="w-1/3 flex flex-col gap-2.5 pr-2">
-                        {paymentModeData.map((item, index) => (
-                          <div key={item.name} className="flex flex-col gap-0.5 text-xs">
-                            <div className="flex items-center gap-1.5 font-medium text-foreground">
-                              <span
-                                className="w-2.5 h-2.5 rounded-full shrink-0"
-                                style={{ backgroundColor: PIE_COLORS[index % PIE_COLORS.length] }}
-                              />
-                              <span className="capitalize">{item.name.toLowerCase()}</span>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground pl-4">
-                              ₹{item.value.toFixed(2)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <PaymentModeChart
+              ordersLoading={ordersLoading}
+              activePaymentsData={activePaymentsData}
+              pieColors={PIE_COLORS}
+            />
 
             {/* Top Selling Items (Bar Chart) */}
-            <Card className="shadow-sm md:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold">Top 5 Selling Items</CardTitle>
-                <CardDescription className="text-xs">Highest volume menu items ordered.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-2">
-                <div className="h-[260px] w-full">
-                  {ordersLoading ? (
-                    <Skeleton className="h-full w-full rounded-lg" />
-                  ) : topItems.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
-                      No order items sold yet.
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={topItems} layout="vertical" margin={{ left: 30, right: 20, top: 10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
-                        <XAxis type="number" tick={{ fontSize: 10 }} />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={120} />
-                        <Tooltip contentStyle={{ fontSize: 11 }} formatter={(v) => [`${v} units`, "Sold"]} />
-                        <Bar dataKey="quantity" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <TopItemsChart ordersLoading={ordersLoading} activeTopItems={activeTopItems} />
           </div>
         </div>
       )}

@@ -4,15 +4,21 @@ import { orderApi, type CreateOrderDto, type UpdateOrderDto } from "@/api/orders
 export const orderKeys = {
   all: ["orders"] as const,
   lists: () => [...orderKeys.all, "list"] as const,
-  list: (outletId?: string, includeDeleted?: boolean) => [...orderKeys.lists(), { outletId, includeDeleted }] as const,
+  list: (outletId?: string, includeDeleted?: boolean, startDate?: string, endDate?: string) =>
+    [...orderKeys.lists(), { outletId, includeDeleted, startDate, endDate }] as const,
   details: () => [...orderKeys.all, "detail"] as const,
   detail: (id: string) => [...orderKeys.details(), id] as const,
 }
 
-export function useOrders(outletId?: string, includeDeleted = false) {
+export function useOrders(
+  outletId?: string,
+  includeDeleted = false,
+  startDate?: string,
+  endDate?: string
+) {
   return useQuery({
-    queryKey: orderKeys.list(outletId, includeDeleted),
-    queryFn: () => orderApi.list(outletId, includeDeleted),
+    queryKey: orderKeys.list(outletId, includeDeleted, startDate, endDate),
+    queryFn: () => orderApi.list(outletId, includeDeleted, startDate, endDate),
   })
 }
 
