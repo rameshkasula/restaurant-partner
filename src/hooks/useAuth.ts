@@ -9,6 +9,9 @@ export function useLogin() {
       if (data.token) {
         setAccessToken(data.token)
       }
+      if (data.user) {
+        localStorage.setItem("user_info", JSON.stringify(data.user))
+      }
     },
   })
 }

@@ -66,6 +66,7 @@ export default function PrivateLayout() {
 
   const handleLogout = () => {
     removeAccessToken()
+    localStorage.removeItem("user_info")
     toast.success("Successfully logged out.")
     navigate("/login")
   }

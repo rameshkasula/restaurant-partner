@@ -46,9 +46,14 @@ export const NAV_ITEMS = [
     label: "Dashboard",
     path: APP_PATHS.DASHBOARD,
     icon: IconLayoutDashboard,
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.PLATFORM_MANAGER],
+  },
+  {
+    // analytics
+    label: "Analytics",
+    path: APP_PATHS.ANALYTICS,
+    icon: IconLayoutDashboard,
     allowedRoles: [
-      ROLES.SUPER_ADMIN,
-      ROLES.PLATFORM_MANAGER,
       ROLES.RESTAURANT_OWNER,
       ROLES.MANAGER,
       ROLES.POS_STAFF,

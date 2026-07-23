@@ -47,7 +47,7 @@ export function useNavigation() {
     if (!userRole) return []
     return NAV_ITEMS.filter((item) => {
       if (!item.allowedRoles) return true
-      return item.allowedRoles.includes(userRole as any)
+      return (item.allowedRoles as readonly string[]).includes(userRole)
     })
   }, [userRole])
 
