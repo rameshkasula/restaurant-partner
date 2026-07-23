@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
-  IconFlame,
   IconUser,
   IconMail,
   IconPhone,
@@ -28,6 +27,8 @@ import {
   IconAlertCircle,
   IconLoader2,
 } from '@tabler/icons-react';
+import { BrandLogo } from '@/components/BrandLogo';
+import { APP_NAME } from '@/utils/constants';
 import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -91,7 +92,7 @@ function SuccessScreen({ name }: { name: string }) {
       <div>
         <h2 className="text-xl font-bold text-foreground">You're on the list, {name.split(' ')[0]}!</h2>
         <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
-          Thanks for your interest in RestroPartner. We're onboarding restaurants in phases —
+          Thanks for your interest in {APP_NAME}. We're onboarding restaurants in phases —
           we'll reach out to you very soon with your access details.
         </p>
       </div>
@@ -184,14 +185,7 @@ export default function Register() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex justify-center">
-          <Link to="/" className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 transition-transform group-hover:scale-110">
-              <IconFlame className="size-5 text-primary-foreground" stroke={2} />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Restro<span className="text-primary">Partner</span>
-            </span>
-          </Link>
+          <BrandLogo />
         </div>
 
         <Card className="shadow-xl shadow-black/5">

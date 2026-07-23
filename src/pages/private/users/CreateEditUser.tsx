@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
@@ -51,7 +52,6 @@ function ErrorMsg({ message }: { message: string }) {
 
 // ── Form Data ─────────────────────────────────────────────────────────────────
 
-
 interface UserFormData {
   email: string
   password: string
@@ -90,6 +90,7 @@ function UserDialogForm({
     handleSubmit,
     watch,
     reset,
+    trigger,
     formState: { errors },
   } = useForm<UserFormData>({ defaultValues })
 
@@ -104,20 +105,9 @@ function UserDialogForm({
   const filteredOutlets = outlets.filter(
     (o) =>
       !o.deletedAt &&
-      (selectedOrgId
-        ? o.organizationId === selectedOrgId
-        : true)
+      (selectedOrgId ? o.organizationId === selectedOrgId : true)
   )
 
-  const needsOrg =
-    selectedRole === UserRole.RESTAURANT_OWNER ||
-    selectedRole === UserRole.MANAGER ||
-    selectedRole === UserRole.POS_STAFF ||
-    selectedRole === UserRole.KITCHEN_STAFF
-  const needsOutlet =
-    selectedRole === UserRole.MANAGER ||
-    selectedRole === UserRole.POS_STAFF ||
-    selectedRole === UserRole.KITCHEN_STAFF
   const isPlatformRole =
     selectedRole === UserRole.SUPER_ADMIN ||
     selectedRole === UserRole.PLATFORM_MANAGER
@@ -164,14 +154,19 @@ function UserDialogForm({
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="user-password" className="font-medium text-foreground">
+            <Label
+              htmlFor="user-password"
+              className="font-medium text-foreground"
+            >
               Password {isEdit ? "" : "*"}
             </Label>
             <div className="relative">
               <Input
                 id="user-password"
                 type={showPassword ? "text" : "password"}
-                placeholder={isEdit ? "Leave blank to keep unchanged" : "Min. 6 characters"}
+                placeholder={
+                  isEdit ? "Leave blank to keep unchanged" : "Min. 6 characters"
+                }
                 aria-invalid={!!errors.password}
                 className="pr-10"
                 {...register("password", {
@@ -185,7 +180,7 @@ function UserDialogForm({
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
                 aria-label="Toggle password visibility"
               >
@@ -223,15 +218,21 @@ function UserDialogForm({
           {!isPlatformRole && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="user-org" className="font-medium text-foreground">
-                Organization{needsOrg && !needsOutlet ? " *" : " (optional)"}
+                Organization *
               </Label>
               <NativeSelect
                 id="user-org"
                 aria-invalid={!!(errors as any).organizationId}
                 {...register("organizationId", {
-                  required: needsOrg && !needsOutlet
-                    ? "Organization is required for this role."
-                    : false,
+                  validate: (value) => {
+                    if (!value && !watch("outletId")) {
+                      return "Either Organization or Outlet must be selected."
+                    }
+                    return true
+                  },
+                  onChange: () => {
+                    trigger("outletId")
+                  },
                 })}
                 className="h-9 w-full text-sm"
               >
@@ -251,21 +252,32 @@ function UserDialogForm({
             </div>
           )}
 
-          {/* Outlet (only for outlet roles) */}
-          {needsOutlet && (
+          {/* Outlet (only for non-platform roles) */}
+          {!isPlatformRole && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="user-outlet" className="font-medium text-foreground">
+              <Label
+                htmlFor="user-outlet"
+                className="font-medium text-foreground"
+              >
                 Outlet *
               </Label>
               <NativeSelect
                 id="user-outlet"
                 aria-invalid={!!(errors as any).outletId}
                 {...register("outletId", {
-                  required: "Outlet is required for this role.",
+                  validate: (value) => {
+                    if (!value && !watch("organizationId")) {
+                      return "Either Organization or Outlet must be selected."
+                    }
+                    return true
+                  },
+                  onChange: () => {
+                    trigger("organizationId")
+                  },
                 })}
                 className="h-9 w-full text-sm"
               >
-                <NativeSelectOption value="">— Select Outlet —</NativeSelectOption>
+                <NativeSelectOption value="">— None —</NativeSelectOption>
                 {filteredOutlets.map((outlet) => (
                   <NativeSelectOption key={outlet._id} value={outlet._id}>
                     {outlet.name}
@@ -299,8 +311,8 @@ function UserDialogForm({
                   ? "Saving…"
                   : "Creating…"
                 : isEdit
-                ? "Save Changes"
-                : "Create User"}
+                  ? "Save Changes"
+                  : "Create User"}
             </Button>
           </DialogFooter>
         </form>
@@ -327,13 +339,17 @@ export function CreateUserDialog() {
 
   const onSubmit = (data: UserFormData) => {
     setApiError("")
+    const isPlatformRole =
+      data.role === UserRole.SUPER_ADMIN ||
+      data.role === UserRole.PLATFORM_MANAGER
+
     mutate(
       {
         email: data.email.trim(),
         password: data.password,
         role: data.role as UserRole,
-        organizationId: data.organizationId || null,
-        outletId: data.outletId || null,
+        organizationId: isPlatformRole ? null : data.organizationId || null,
+        outletId: isPlatformRole ? null : data.outletId || null,
       },
       {
         onSuccess: () => {
@@ -399,11 +415,15 @@ export function EditUserDialog({ user }: { user: User }) {
 
   const onSubmit = (data: UserFormData) => {
     setApiError("")
+    const isPlatformRole =
+      data.role === UserRole.SUPER_ADMIN ||
+      data.role === UserRole.PLATFORM_MANAGER
+
     const payload: any = {
       email: data.email.trim(),
       role: data.role,
-      organizationId: data.organizationId || null,
-      outletId: data.outletId || null,
+      organizationId: isPlatformRole ? null : data.organizationId || null,
+      outletId: isPlatformRole ? null : data.outletId || null,
     }
     if (data.password) payload.password = data.password
 

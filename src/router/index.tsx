@@ -18,15 +18,24 @@ const Loadable = (Component: React.ComponentType) => () => (
 )
 
 const Home = Loadable(lazy(() => import("@pages/public/Home")))
+const PrivacyPolicy = Loadable(
+  lazy(() => import("@pages/public/PrivacyPolicy"))
+)
+const TermsOfService = Loadable(
+  lazy(() => import("@pages/public/TermsOfService"))
+)
+const CookiePolicy = Loadable(lazy(() => import("@pages/public/CookiePolicy")))
+const Blogs = Loadable(lazy(() => import("@pages/public/Blogs")))
+const Careers = Loadable(lazy(() => import("@pages/public/Careers")))
 const Register = Loadable(lazy(() => import("@pages/auth/Register")))
 const Login = Loadable(lazy(() => import("@pages/auth/Login")))
 const ForgotPassword = Loadable(
   lazy(() => import("@pages/auth/ForgotPassword"))
 )
 const ResetPassword = Loadable(lazy(() => import("@pages/auth/ResetPassword")))
-const Dashboard = Loadable(lazy(() => import("@pages/private/Dashboard")))
-const Orders = Loadable(lazy(() => import("@pages/private/Orders")))
-const MenuItems = Loadable(lazy(() => import("@pages/private/MenuItems")))
+const Dashboard = Loadable(lazy(() => import("@pages/private/dashboard")))
+const Orders = Loadable(lazy(() => import("@pages/private/orders")))
+const MenuItems = Loadable(lazy(() => import("@pages/private/menuitems")))
 const Outlets = Loadable(lazy(() => import("@pages/private/outlets/index")))
 const Users = Loadable(lazy(() => import("@pages/private/users/index")))
 const Organizations = Loadable(
@@ -68,6 +77,26 @@ const router = createBrowserRouter([
   {
     path: APP_PATHS.RESET_PASSWORD,
     element: <ResetPassword />,
+  },
+  {
+    path: APP_PATHS.PRIVACY_POLICY,
+    element: <PrivacyPolicy />,
+  },
+  {
+    path: APP_PATHS.TERMS_OF_SERVICE,
+    element: <TermsOfService />,
+  },
+  {
+    path: APP_PATHS.COOKIE_POLICY,
+    element: <CookiePolicy />,
+  },
+  {
+    path: APP_PATHS.BLOGS,
+    element: <Blogs />,
+  },
+  {
+    path: APP_PATHS.CAREERS,
+    element: <Careers />,
   },
   {
     path: APP_PATHS.HOME,

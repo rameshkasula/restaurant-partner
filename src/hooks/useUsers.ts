@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { userApi, type CreateUserPayload, type UpdateUserPayload } from "@/api/users.api"
+import { userApi, type CreateUserPayload, type UpdateUserPayload, type UserStatus } from "@/api/users.api"
 
 export const userKeys = {
   all: ["users"] as const,
@@ -30,6 +30,18 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) =>
       userApi.update(id, payload),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: userKeys.lists() })
+      qc.invalidateQueries({ queryKey: userKeys.detail(variables.id) })
+    },
+  })
+}
+
+export function useUpdateUserStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: UserStatus }) =>
+      userApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: userKeys.lists() })
       qc.invalidateQueries({ queryKey: userKeys.detail(variables.id) })

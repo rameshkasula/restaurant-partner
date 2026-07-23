@@ -1,5 +1,13 @@
 import axiosInstance from "@/utils/axiosInstance";
 
+export const RestaurantRequestStatus = {
+  WAITING_FOR_CALL: 'still waiting for call',
+  CONTACTED: 'contacted',
+  DECLINED: 'declined',
+} as const
+
+export type RestaurantRequestStatus = typeof RestaurantRequestStatus[keyof typeof RestaurantRequestStatus]
+
 // Types
 export interface RestaurantRequest {
   _id: string;
@@ -11,6 +19,7 @@ export interface RestaurantRequest {
   city?: string | null;
   state?: string | null;
   message?: string | null;
+  status?: RestaurantRequestStatus;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -24,6 +33,7 @@ export interface CreateRestaurantRequestDto {
   city?: string;
   state?: string;
   message?: string;
+  status?: RestaurantRequestStatus;
 }
 
 export interface UpdateRestaurantRequestDto {
@@ -34,6 +44,7 @@ export interface UpdateRestaurantRequestDto {
   city?: string;
   state?: string;
   message?: string;
+  status?: RestaurantRequestStatus;
 }
 
 export const requestsApi = {
@@ -48,6 +59,9 @@ export const requestsApi = {
 
   update: (id: string, data: UpdateRestaurantRequestDto) =>
     axiosInstance.patch<RestaurantRequest>(`/restaurant-requests/${id}`, data).then((r) => r.data),
+
+  updateStatus: (id: string, status: RestaurantRequestStatus) =>
+    axiosInstance.patch<RestaurantRequest>(`/restaurant-requests/${id}/status`, { status }).then((r) => r.data),
 
   delete: (id: string) =>
     axiosInstance.delete<void>(`/restaurant-requests/${id}`).then((r) => r.data),

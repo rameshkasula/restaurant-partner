@@ -6,51 +6,29 @@ import { Separator } from "@/components/ui/separator"
 import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import {
-  IconFlame,
-  IconLayoutDashboard,
-  IconClock,
-  IconBuildingStore,
-  IconReceipt,
-  IconBook2,
-  IconMapPin,
-  IconSettings,
-  IconUsers,
   IconLogout,
   IconMenu2,
   IconX,
   IconSun,
   IconMoon,
 } from "@tabler/icons-react"
+import { BrandLogoSmall } from "@/components/BrandLogo"
 import { toast } from "sonner"
 import { APP_PATHS } from "@/router/paths"
-
-// Navigation items definition
-const NAV_ITEMS = [
-  { label: "Dashboard", path: APP_PATHS.DASHBOARD, icon: IconLayoutDashboard },
-  { label: "Requests", path: APP_PATHS.REQUESTS, icon: IconClock },
-  {
-    label: "Organizations",
-    path: APP_PATHS.ORGANIZATIONS,
-    icon: IconBuildingStore,
-  },
-  { label: "Orders", path: APP_PATHS.ORDERS, icon: IconReceipt },
-  { label: "Menu Items", path: APP_PATHS.MENU_ITEMS, icon: IconBook2 },
-  { label: "Outlets", path: APP_PATHS.OUTLETS, icon: IconMapPin },
-  { label: "Users", path: APP_PATHS.USERS, icon: IconUsers },
-  { label: "Plans", path: APP_PATHS.PLANS, icon: IconSettings },
-  { label: "Staff", path: APP_PATHS.STAFF, icon: IconUsers },
-]
+import { useNavigation } from "@/hooks/useNavigation"
+import { NAV_ITEMS } from "@/utils/permissions"
 
 export default function PrivateLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { theme, setTheme } = useTheme()
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const { navItems } = useNavigation()
 
   // Get current user info from token
   const [userInfo, setUserInfo] = useState({
     email: "Admin",
-    role: "Super Admin",
+    role: "User",
   })
 
   useEffect(() => {
@@ -70,6 +48,17 @@ export default function PrivateLayout() {
     }
   }, [])
 
+  // Route guard: Redirect to dashboard if the user tries to access a nav route they are not authorized for
+  useEffect(() => {
+    if (navItems.length > 0) {
+      const isAllowed = navItems.some((item) => item.path === location.pathname)
+      const isNavPath = NAV_ITEMS.some((item) => item.path === location.pathname)
+      if (isNavPath && !isAllowed) {
+        navigate(APP_PATHS.DASHBOARD)
+      }
+    }
+  }, [location.pathname, navItems, navigate])
+
   // Close sidebar on path change (for mobile navigation)
   useEffect(() => {
     setMobileSidebarOpen(false)
@@ -82,7 +71,7 @@ export default function PrivateLayout() {
   }
 
   // Find active navigation label to display in header title
-  const activeNavItem = NAV_ITEMS.find(
+  const activeNavItem = navItems.find(
     (item) => item.path === location.pathname
   )
   const headerTitle = activeNavItem ? activeNavItem.label : "Portal"
@@ -92,20 +81,15 @@ export default function PrivateLayout() {
   const sidebarContent = (
     <div className="flex h-full flex-col border-r border-border bg-sidebar text-sidebar-foreground">
       {/* Brand Header */}
-      <div className="flex h-16 items-center gap-2.5 px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/20">
-          <IconFlame className="size-4.5 text-primary-foreground" stroke={2} />
-        </div>
-        <span className="text-md font-bold tracking-tight text-foreground">
-          Restro<span className="text-primary">Partner</span>
-        </span>
+      <div className="flex h-16 items-center px-6">
+        <BrandLogoSmall />
       </div>
 
       <Separator />
 
       {/* Nav List */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-6">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.path
           const Icon = item.icon
           return (

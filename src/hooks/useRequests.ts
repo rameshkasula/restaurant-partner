@@ -3,6 +3,7 @@ import {
   requestsApi,
   type CreateRestaurantRequestDto,
   type UpdateRestaurantRequestDto,
+  type RestaurantRequestStatus,
 } from "@/api/requests.api"
 
 export const requestKeys = {
@@ -47,6 +48,25 @@ export function useUpdateRequest() {
       id: string
       data: UpdateRestaurantRequestDto
     }) => requestsApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: requestKeys.lists() })
+      queryClient.invalidateQueries({
+        queryKey: requestKeys.detail(variables.id),
+      })
+    },
+  })
+}
+
+export function useUpdateRequestStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string
+      status: RestaurantRequestStatus
+    }) => requestsApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: requestKeys.lists() })
       queryClient.invalidateQueries({

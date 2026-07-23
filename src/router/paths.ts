@@ -1,9 +1,14 @@
 export const APP_PATHS = {
-  // Publc
+  // Public
   HOME: "/",
   REGISTER: "/register",
   LOGIN: "/login",
   REQUEST: "/request",
+  PRIVACY_POLICY: "/privacy-policy",
+  TERMS_OF_SERVICE: "/terms-of-service",
+  COOKIE_POLICY: "/cookie-policy",
+  BLOGS: "/blogs",
+  CAREERS: "/careers",
 
   // Private Auth
   FORGOT_PASSWORD: "/forgot-password",

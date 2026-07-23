@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  IconFlame,
   IconLock,
   IconEye,
   IconEyeOff,
@@ -24,6 +23,7 @@ import {
   IconShieldCheck,
   IconAlertTriangle,
 } from '@tabler/icons-react';
+import { BrandLogo } from '@/components/BrandLogo';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Step = 'form' | 'success';
@@ -269,14 +269,7 @@ export default function ResetPassword() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex justify-center">
-          <Link to="/" className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 transition-transform group-hover:scale-110">
-              <IconFlame className="size-5 text-primary-foreground" stroke={2} />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Restro<span className="text-primary">Partner</span>
-            </span>
-          </Link>
+          <BrandLogo />
         </div>
 
         <Card className="shadow-xl shadow-black/5">

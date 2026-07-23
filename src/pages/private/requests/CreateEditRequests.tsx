@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { IconEdit, IconPlus, IconAlertCircle } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { APP_NAME } from "@/utils/constants"
 
 // ─── Small Helper for Error Alert ────────────────────────────────────────────
 export function ErrorMsg({ message }: { message: string }) {
@@ -277,7 +278,7 @@ export function CreateRequestDialog() {
         <DialogHeader>
           <DialogTitle>Create New Request</DialogTitle>
           <DialogDescription>
-            Submit details to request early access for a restaurant partner.
+            Submit details to request early access for {APP_NAME}.
           </DialogDescription>
         </DialogHeader>
 

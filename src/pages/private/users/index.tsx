@@ -29,12 +29,39 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { UserRole, USER_ROLE_LABELS } from "@/api/users.api"
-import { useUsers, useDeleteUser, useRestoreUser } from "@/hooks/useUsers"
+import { UserRole, USER_ROLE_LABELS, UserStatus } from "@/api/users.api"
+import { useUsers, useDeleteUser, useRestoreUser, useUpdateUserStatus } from "@/hooks/useUsers"
 import { useOrganizations } from "@/hooks/useOrganizations"
 import { useOutlets } from "@/hooks/useOutlets"
 import { CreateUserDialog, EditUserDialog } from "./CreateEditUser"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+export { UserStatus }
+
+const USER_STATUS_STYLES = {
+  [UserStatus.ACTIVE]: {
+    label: "Active",
+    badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-900/40",
+    dotClass: "bg-emerald-500",
+  },
+  [UserStatus.ON_HOLD]: {
+    label: "On Hold",
+    badgeClass: "bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-300 dark:border-amber-900/40",
+    dotClass: "bg-amber-500",
+  },
+  [UserStatus.INACTIVE]: {
+    label: "Inactive",
+    badgeClass: "bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-300 dark:border-rose-900/40",
+    dotClass: "bg-rose-500",
+  },
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -169,6 +196,7 @@ export default function Users() {
 
   const deleteMutation = useDeleteUser()
   const restoreMutation = useRestoreUser()
+  const updateStatusMutation = useUpdateUserStatus()
 
   // Quick lookup maps for display
   const orgMap = React.useMemo(() => {
@@ -405,7 +433,43 @@ export default function Users() {
 
                     {/* Status */}
                     <TableCell>
-                      <StatusBadge isDeleted={deleted} />
+                      {deleted ? (
+                        <StatusBadge isDeleted={true} />
+                      ) : (
+                        (() => {
+                          const currentStatus = user.status || UserStatus.ACTIVE
+                          const statusInfo = USER_STATUS_STYLES[currentStatus] || USER_STATUS_STYLES[UserStatus.ACTIVE]
+
+                          const handleStatusChange = async (newStatus: UserStatus | null) => {
+                            if (!newStatus) return
+                            try {
+                              await updateStatusMutation.mutateAsync({
+                                id: userId,
+                                status: newStatus,
+                              })
+                              toast.success("User status updated successfully.")
+                            } catch {
+                              toast.error("Failed to update user status.")
+                            }
+                          }
+
+                          return (
+                            <Select value={currentStatus} onValueChange={handleStatusChange}>
+                              <SelectTrigger className={cn("h-6 rounded-md px-2 font-medium shadow-none hover:bg-muted/50 border-0 flex items-center justify-between min-w-[110px] w-fit text-xs cursor-pointer", statusInfo.badgeClass)}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-popover text-popover-foreground border border-border shadow-md rounded-md p-1 min-w-[130px]">
+                                {Object.entries(USER_STATUS_STYLES).map(([value, info]) => (
+                                  <SelectItem key={value} value={value} className="cursor-pointer hover:bg-accent hover:text-accent-foreground py-1 px-2.5 rounded-sm flex items-center text-xs">
+                                    <span className={cn("inline-block w-2.5 h-2.5 rounded-full mr-2 shrink-0", info.dotClass)} />
+                                    {info.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )
+                        })()
+                      )}
                     </TableCell>
 
                     {/* Created */}

@@ -21,6 +21,14 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.KITCHEN_STAFF]: "Kitchen Staff",
 }
 
+export const UserStatus = {
+  ACTIVE: 'active',
+  ON_HOLD: 'on hold',
+  INACTIVE: 'in active',
+} as const
+
+export type UserStatus = typeof UserStatus[keyof typeof UserStatus]
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface User {
   _id: string
@@ -29,6 +37,7 @@ export interface User {
   outletId: string | null
   role: UserRole
   email: string
+  status?: UserStatus
   isDeleted: boolean
   deletedAt?: string | null
   createdAt: string
@@ -41,6 +50,7 @@ export interface CreateUserPayload {
   role: UserRole
   email: string
   password: string
+  status?: UserStatus
 }
 
 export interface UpdateUserPayload {
@@ -49,6 +59,7 @@ export interface UpdateUserPayload {
   role?: UserRole
   email?: string
   password?: string
+  status?: UserStatus
 }
 
 // ── API Functions ─────────────────────────────────────────────────────────────
@@ -71,6 +82,7 @@ export const userApi = {
       role: payload.role,
       email: payload.email,
       passwordHash: payload.password,
+      status: payload.status,
     })
     return res.data
   },
@@ -82,7 +94,13 @@ export const userApi = {
     if (payload.role) body.role = payload.role
     if (payload.email) body.email = payload.email
     if (payload.password) body.passwordHash = payload.password
+    if (payload.status) body.status = payload.status
     const res = await axiosInstance.patch(`/user/${id}`, body)
+    return res.data
+  },
+
+  updateStatus: async (id: string, status: UserStatus): Promise<User> => {
+    const res = await axiosInstance.patch(`/user/${id}/status`, { status })
     return res.data
   },
 

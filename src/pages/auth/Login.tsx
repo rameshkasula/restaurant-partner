@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
-  IconFlame,
   IconMail,
   IconLock,
   IconEye,
@@ -26,6 +25,8 @@ import {
   IconLoader2,
   IconAlertCircle,
 } from "@tabler/icons-react"
+import { BrandLogo } from "@/components/BrandLogo"
+import { APP_NAME } from "@/utils/constants"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -81,21 +82,14 @@ export default function Login() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex justify-center">
-          <Link to="/" className="group flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 transition-transform group-hover:scale-110">
-              <IconFlame className="size-5 text-primary-foreground" stroke={2} />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground">
-              Restro<span className="text-primary">Partner</span>
-            </span>
-          </Link>
+          <BrandLogo />
         </div>
 
         <Card className="shadow-xl shadow-black/5">
           <CardHeader className="pb-5">
             <CardTitle className="text-lg font-bold">Welcome back</CardTitle>
             <CardDescription className="text-xs">
-              Sign in to your RestroPartner account.
+              Sign in to your {APP_NAME} account.
             </CardDescription>
           </CardHeader>
 
