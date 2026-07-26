@@ -13,10 +13,13 @@ import { cn } from "@/lib/utils"
 import { getAccessToken } from "@/utils/tokens"
 import { useLiveOrders, useUpdateOrder } from "@/hooks/useOrders"
 import { useMenuItems } from "@/hooks/useMenuItems"
+import { useOutlets } from "@/hooks/useOutlets"
 import { OrderStatus, type Order } from "@/api/orders.api"
+import { UserRole } from "@/api/users.api"
 import { useOutletStore } from "@/store/outletStore"
 import { DataTable } from "@/components/DataTable/DataTable"
 import type { ColumnDef } from "@/components/DataTable/DataTable"
+import { Pagination } from "@/components/DataTable/Pagination"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { LiveOrdersHeader } from "./components/LiveOrdersHeader"
@@ -25,10 +28,7 @@ import {
   PAYMENT_MODE_ICONS,
   STATUS_BADGE_CLASSES,
 } from "./components/orderHelpers"
-import {
-  formatTime,
-  formatCurrency,
-} from "@/utils/formatters"
+import { formatTime, formatCurrency } from "@/utils/formatters"
 
 // ── Profile Hook ─────────────────────────────────────────────────────────────
 
@@ -94,10 +94,25 @@ export default function LiveOrders() {
     }
   }, [lockedOutletId, selectedOutlet, setSelectedOutlet])
 
+  const [historyPage, setHistoryPage] = useState(1)
+  const [historyLimit, setHistoryLimit] = useState(10)
+
   const activeOutletId = useMemo(() => {
     if (lockedOutletId) return lockedOutletId
     return selectedOutlet === "ALL" ? undefined : selectedOutlet
   }, [lockedOutletId, selectedOutlet])
+
+  const isPlatformUser =
+    profile?.role === UserRole.SUPER_ADMIN ||
+    profile?.role === UserRole.PLATFORM_MANAGER
+
+  // Only query outlets if platform user
+  const { data: outlets = [] } = useOutlets(isPlatformUser)
+
+  // Reset page when activeOutletId changes
+  useEffect(() => {
+    setHistoryPage(1)
+  }, [activeOutletId])
 
   // Queries
   const {
@@ -105,9 +120,17 @@ export default function LiveOrders() {
     isLoading: ordersLoading,
     refetch,
     isRefetching,
-  } = useLiveOrders(activeOutletId)
+  } = useLiveOrders(
+    activeOutletId,
+    undefined,
+    undefined,
+    historyPage,
+    historyLimit
+  )
 
-  const { data: menuItems = [] } = useMenuItems(activeOutletId, false, false)
+  console.log("ordersData", ordersData)
+
+  const { data: menuItems = [] } = useMenuItems(activeOutletId, false, true)
 
   // Status Mutation
   const updateOrderMutation = useUpdateOrder()
@@ -161,32 +184,51 @@ export default function LiveOrders() {
     [menuItemsMap]
   )
 
-  // Safe parsing orders list
-  const orders: Order[] = useMemo(() => {
+  // Safe parsing live pipeline orders list (recentOrders)
+  const pipelineOrders: Order[] = useMemo(() => {
     if (!ordersData) return []
-    if (Array.isArray(ordersData)) return ordersData
-    if (ordersData && typeof ordersData === "object" && "data" in ordersData) {
-      return (ordersData as { data: Order[] }).data
+    if (ordersData && typeof ordersData === "object" && "recentOrders" in ordersData) {
+      return (ordersData as any).recentOrders || []
     }
+    // Fallback if backend returned raw array in development
+    if (Array.isArray(ordersData)) return ordersData
     return []
+  }, [ordersData])
+
+  // Safe parsing historical orders list (outletOrders.data)
+  const historyOrders: Order[] = useMemo(() => {
+    if (!ordersData) return []
+    if (ordersData && typeof ordersData === "object" && "outletOrders" in ordersData) {
+      return (ordersData as any).outletOrders?.data || []
+    }
+    // Fallback if backend returned raw array in development
+    if (Array.isArray(ordersData)) return ordersData
+    return []
+  }, [ordersData])
+
+  const paginationMeta = useMemo(() => {
+    if (ordersData && typeof ordersData === "object" && "outletOrders" in ordersData) {
+      return (ordersData as any).outletOrders?.pagination || null
+    }
+    return null
   }, [ordersData])
 
   // Split orders into pipeline lists
   const pendingOrders = useMemo(() => {
-    return orders.filter(
+    return pipelineOrders.filter(
       (o) => o.status === OrderStatus.PENDING && !o.isDeleted
     )
-  }, [orders])
+  }, [pipelineOrders])
 
   const preparingOrders = useMemo(() => {
-    return orders.filter(
+    return pipelineOrders.filter(
       (o) => o.status === OrderStatus.PREPARING && !o.isDeleted
     )
-  }, [orders])
+  }, [pipelineOrders])
 
   const readyOrders = useMemo(() => {
-    return orders.filter((o) => o.status === OrderStatus.READY && !o.isDeleted)
-  }, [orders])
+    return pipelineOrders.filter((o) => o.status === OrderStatus.READY && !o.isDeleted)
+  }, [pipelineOrders])
 
   const copyOrderId = (id: any) => {
     const strId =
@@ -305,18 +347,25 @@ export default function LiveOrders() {
     : null
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground overflow-hidden">
+    <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       {/* Page Header (Fixed) */}
       <div className="p-6 pb-2">
         <LiveOrdersHeader
           isRefetching={isRefetching}
           ordersLoading={ordersLoading}
           onRefresh={refetch}
+          isPlatformUser={isPlatformUser}
+          outlets={outlets}
+          selectedOutlet={selectedOutlet}
+          setSelectedOutlet={setSelectedOutlet}
         />
       </div>
 
-      <Tabs defaultValue="live" className="flex flex-1 flex-col overflow-hidden px-6 pb-6">
-        <TabsList className="w-full justify-start max-w-fit mb-4">
+      <Tabs
+        defaultValue="live"
+        className="flex flex-1 flex-col overflow-hidden px-6 pb-6"
+      >
+        <TabsList className="mb-4 w-full max-w-fit justify-start">
           <TabsTrigger value="live" className="gap-2">
             <IconClock className="size-4" /> Live Pipeline
           </TabsTrigger>
@@ -325,94 +374,119 @@ export default function LiveOrders() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="live" className="flex-1 min-h-0 m-0 border-none p-0 outline-none">
+        <TabsContent
+          value="live"
+          className="m-0 min-h-0 flex-1 border-none p-0 outline-none"
+        >
           {/* Live Pipeline Columns Grid */}
           <div className="grid h-full grid-cols-1 gap-6 md:grid-cols-3">
             {/* Column 1: Pending/New */}
-        <OrderColumn
-          title="New/Pending"
-          icon={<IconClock className="size-4 animate-pulse text-destructive" />}
-          count={pendingOrders.length}
-          orders={pendingOrders}
-          isLoading={ordersLoading}
-          emptyTitle="No new orders"
-          emptySub="Fresh requests will appear here instantly."
-          emptyIcon={
-            <IconAlertCircle className="mb-2 size-8 text-muted-foreground/30" />
-          }
-          getMenuItemName={getMenuItemName}
-          copyOrderId={copyOrderId}
-          timeTrigger={timeTrigger}
-          isMutatingId={isMutatingId}
-          onUpdateStatus={handleUpdateStatus}
-          columnType="pending"
-        />
+            <OrderColumn
+              title="New/Pending"
+              icon={
+                <IconClock className="size-4 animate-pulse text-destructive" />
+              }
+              count={pendingOrders.length}
+              orders={pendingOrders}
+              isLoading={ordersLoading}
+              emptyTitle="No new orders"
+              emptySub="Fresh requests will appear here instantly."
+              emptyIcon={
+                <IconAlertCircle className="mb-2 size-8 text-muted-foreground/30" />
+              }
+              getMenuItemName={getMenuItemName}
+              copyOrderId={copyOrderId}
+              timeTrigger={timeTrigger}
+              isMutatingId={isMutatingId}
+              onUpdateStatus={handleUpdateStatus}
+              columnType="pending"
+            />
 
-        {/* Column 2: Preparing/Kitchen */}
-        <OrderColumn
-          title="Kitchen Prep"
-          icon={<IconToolsKitchen2 className="size-4 text-primary" />}
-          count={preparingOrders.length}
-          orders={preparingOrders}
-          isLoading={ordersLoading}
-          emptyTitle="No orders in prep"
-          emptySub="Accept pending orders to dispatch them to the kitchen."
-          emptyIcon={
-            <IconToolsKitchen2 className="mb-2 size-8 text-muted-foreground/30" />
-          }
-          getMenuItemName={getMenuItemName}
-          copyOrderId={copyOrderId}
-          timeTrigger={timeTrigger}
-          isMutatingId={isMutatingId}
-          onUpdateStatus={handleUpdateStatus}
-          columnType="preparing"
-        />
+            {/* Column 2: Preparing/Kitchen */}
+            <OrderColumn
+              title="Kitchen Prep"
+              icon={<IconToolsKitchen2 className="size-4 text-primary" />}
+              count={preparingOrders.length}
+              orders={preparingOrders}
+              isLoading={ordersLoading}
+              emptyTitle="No orders in prep"
+              emptySub="Accept pending orders to dispatch them to the kitchen."
+              emptyIcon={
+                <IconToolsKitchen2 className="mb-2 size-8 text-muted-foreground/30" />
+              }
+              getMenuItemName={getMenuItemName}
+              copyOrderId={copyOrderId}
+              timeTrigger={timeTrigger}
+              isMutatingId={isMutatingId}
+              onUpdateStatus={handleUpdateStatus}
+              columnType="preparing"
+            />
 
-        {/* Column 3: Ready for Pickup */}
-        <OrderColumn
-          title="Ready / Pickup"
-          icon={<IconPackage className="size-4 text-secondary-foreground" />}
-          count={readyOrders.length}
-          orders={readyOrders}
-          isLoading={ordersLoading}
-          emptyTitle="No orders waiting"
-          emptySub="Ready orders will align here for completion checkout."
-          emptyIcon={
-            <IconPackage className="mb-2 size-8 text-muted-foreground/30" />
-          }
-          getMenuItemName={getMenuItemName}
-          copyOrderId={copyOrderId}
-          timeTrigger={timeTrigger}
-          isMutatingId={isMutatingId}
-          onUpdateStatus={handleUpdateStatus}
-          columnType="ready"
-        />
-      </div>
+            {/* Column 3: Ready for Pickup */}
+            <OrderColumn
+              title="Ready / Pickup"
+              icon={
+                <IconPackage className="size-4 text-secondary-foreground" />
+              }
+              count={readyOrders.length}
+              orders={readyOrders}
+              isLoading={ordersLoading}
+              emptyTitle="No orders waiting"
+              emptySub="Ready orders will align here for completion checkout."
+              emptyIcon={
+                <IconPackage className="mb-2 size-8 text-muted-foreground/30" />
+              }
+              getMenuItemName={getMenuItemName}
+              copyOrderId={copyOrderId}
+              timeTrigger={timeTrigger}
+              isMutatingId={isMutatingId}
+              onUpdateStatus={handleUpdateStatus}
+              columnType="ready"
+            />
+          </div>
         </TabsContent>
 
-        <TabsContent value="history" className="flex-1 min-h-0 m-0 border-none p-0 outline-none">
+        <TabsContent
+          value="history"
+          className="m-0 min-h-0 flex-1 border-none p-0 outline-none"
+        >
           {/* History Table */}
-          <div className="h-full flex flex-col">
+          <div className="flex h-full flex-col gap-4">
             <DataTable
               title={
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold">Latest Orders History</span>
+                  <span className="text-sm font-bold">
+                    Latest Orders History
+                  </span>
                   <span className="mt-0.5 text-[11px] font-normal text-muted-foreground">
-                    Track and search historical logs of completed, cancelled, or processing invoices.
+                    Track and search historical logs of completed, cancelled, or
+                    processing invoices.
                   </span>
                 </div>
               }
               icon={<IconReceipt className="size-4.5 text-primary" />}
               columns={columns}
-              data={orders}
-              loading={ordersLoading && orders.length === 0}
+              data={historyOrders}
+              loading={ordersLoading && historyOrders.length === 0}
               loadingCount={5}
               searchable={true}
               searchPlaceholder="Search by ID, Status..."
-              pagination={true}
-              defaultPageSize={10}
-              containerClassName="h-full border shadow-sm rounded-xl"
+              pagination={false}
+              containerClassName="flex-1 border shadow-sm rounded-xl overflow-hidden"
             />
+            {paginationMeta && historyOrders.length > 0 && (
+              <Pagination
+                currentPage={historyPage}
+                totalPages={paginationMeta.totalPages}
+                pageSize={historyLimit}
+                totalEntries={paginationMeta.total}
+                onPageChange={(p) => setHistoryPage(p)}
+                onPageSizeChange={(s) => {
+                  setHistoryLimit(s)
+                  setHistoryPage(1)
+                }}
+              />
+            )}
           </div>
         </TabsContent>
       </Tabs>

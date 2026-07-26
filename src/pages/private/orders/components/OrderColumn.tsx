@@ -64,7 +64,7 @@ export function OrderColumn({
   const styles = getColumnStyles()
 
   return (
-    <div className="flex h-full max-h-[75vh] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       {/* Column Header */}
       <div
         className={`flex items-center justify-between border-b border-border/40 ${styles.headerBg} p-3`}
@@ -86,7 +86,7 @@ export function OrderColumn({
       </div>
 
       {/* Column Content */}
-      <div className="flex flex-1 scrollbar-thin flex-col gap-3 overflow-y-auto bg-muted/20 p-3">
+      <div className="flex flex-1 min-h-0 scrollbar-thin flex-col gap-3 overflow-y-auto bg-muted/20 p-3">
         {isLoading ? (
           Array.from({ length: 2 }).map((_, idx) => (
             <Card key={idx} className="border-border/30 shadow-none">

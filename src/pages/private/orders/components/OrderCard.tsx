@@ -4,9 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { IconCopy, IconCheck, IconX, IconPackage } from "@tabler/icons-react"
 import { OrderStatus, type Order } from "@/api/orders.api"
-import {
-  PAYMENT_MODE_ICONS,
-} from "./orderHelpers"
+import { PAYMENT_MODE_ICONS } from "./orderHelpers"
 import {
   getTimeAgo,
   formatTime,
@@ -41,7 +39,7 @@ export function OrderCard({
         return (
           <Badge
             variant="destructive"
-            className="px-1.5 py-0 text-[9px] uppercase font-bold tracking-wider"
+            className="px-1.5 py-0 text-[9px] font-bold tracking-wider uppercase"
           >
             NEW
           </Badge>
@@ -50,7 +48,7 @@ export function OrderCard({
         return (
           <Badge
             variant="default"
-            className="px-1.5 py-0 text-[9px] uppercase font-bold tracking-wider"
+            className="px-1.5 py-0 text-[9px] font-bold tracking-wider uppercase"
           >
             COOKING
           </Badge>
@@ -59,7 +57,7 @@ export function OrderCard({
         return (
           <Badge
             variant="secondary"
-            className="px-1.5 py-0 text-[9px] uppercase font-bold tracking-wider"
+            className="px-1.5 py-0 text-[9px] font-bold tracking-wider uppercase"
           >
             DISPATCH
           </Badge>
@@ -137,8 +135,8 @@ export function OrderCard({
   }
 
   return (
-    <Card className="shadow-sm transition-all duration-200 hover:border-primary/50">
-      <CardContent className="p-3">
+    <Card className="w-full flex-shrink-0 shadow-sm transition-all duration-200 hover:border-primary/50">
+      <CardContent className="flex flex-col p-3">
         {/* Header: Order ID + Badge */}
         <div className="mb-2 flex items-start justify-between gap-2">
           <div className="flex flex-col">
@@ -153,7 +151,8 @@ export function OrderCard({
               </button>
             </span>
             <span className="mt-0.5 text-[10px] text-muted-foreground">
-              {formatTime(order.createdAt)} • {getTimeAgo(order.createdAt, timeTrigger)}
+              {formatTime(order.createdAt)} •{" "}
+              {getTimeAgo(order.createdAt, timeTrigger)}
             </span>
           </div>
           {renderBadge()}
@@ -164,11 +163,16 @@ export function OrderCard({
         {/* Items List */}
         <div className="my-2.5 flex flex-col gap-1.5">
           {order.items.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between text-xs">
+            <div
+              key={idx}
+              className="flex items-center justify-between text-xs"
+            >
               <span className="text-muted-foreground">
                 {getMenuItemName(item.menuItemId)}
               </span>
-              <span className="font-bold text-foreground">x{item.quantity}</span>
+              <span className="font-bold text-foreground">
+                x{item.quantity}
+              </span>
             </div>
           ))}
         </div>
@@ -178,7 +182,8 @@ export function OrderCard({
         {/* Bill Total & Payment Mode */}
         <div className="mt-2.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-1">
-            {order.bill.paymentMode && PAYMENT_MODE_ICONS[order.bill.paymentMode]}
+            {order.bill.paymentMode &&
+              PAYMENT_MODE_ICONS[order.bill.paymentMode]}
             <span className="text-[10px] text-muted-foreground uppercase">
               {order.bill.paymentMode ?? "UNPAID"}
             </span>
