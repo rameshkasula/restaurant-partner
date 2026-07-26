@@ -4,7 +4,7 @@ import { type RestaurantRequest } from "@/api/requests.api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import {
   Dialog,
   DialogContent,
@@ -15,19 +15,10 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
-import { IconEdit, IconPlus, IconAlertCircle } from "@tabler/icons-react"
+import { IconEdit, IconPlus } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { APP_NAME } from "@/utils/constants"
 
-// ─── Small Helper for Error Alert ────────────────────────────────────────────
-export function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
 
 // ─── Edit Dialog Component ───────────────────────────────────────────────────
 interface EditRequestDialogProps {
@@ -74,7 +65,9 @@ export function EditRequestDialog({ request }: EditRequestDialogProps) {
       toast.success("Request updated successfully!")
       setOpen(false)
     } catch (err: unknown) {
-      setError("Failed to update request. Please make sure inputs are valid.")
+      const msg = "Failed to update request. Please make sure inputs are valid."
+      setError(msg)
+      toast.error(msg)
     }
   }
 
@@ -245,7 +238,9 @@ export function CreateRequestDialog() {
       setState("")
       setMessage("")
     } catch (err: unknown) {
-      setError("Failed to create request. Please make sure inputs are valid.")
+      const msg = "Failed to create request. Please make sure inputs are valid."
+      setError(msg)
+      toast.error(msg)
     }
   }
 

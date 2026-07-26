@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { outletApi, type CreateOutletDto, type UpdateOutletDto } from "@/api/outlets.api"
+import { useQuery, useMutation, useQueryClient, type UseQueryResult } from "@tanstack/react-query"
+import { outletApi, type CreateOutletDto, type UpdateOutletDto, type Outlet, type PaginatedOutlets } from "@/api/outlets.api"
 
 export const outletKeys = {
   all: ["outlets"] as const,
@@ -8,10 +8,28 @@ export const outletKeys = {
   detail: (id: string) => [...outletKeys.details(), id] as const,
 }
 
-export function useOutlets() {
+export function useOutlets(
+  enabled?: boolean
+): UseQueryResult<Outlet[], Error>
+
+export function useOutlets(
+  enabled: boolean,
+  page: number,
+  limit: number
+): UseQueryResult<PaginatedOutlets, Error>
+
+export function useOutlets(
+  enabled = true,
+  page?: number,
+  limit?: number
+): UseQueryResult<any, Error> {
   return useQuery({
-    queryKey: outletKeys.lists(),
-    queryFn: outletApi.list,
+    queryKey:
+      page !== undefined && limit !== undefined
+        ? [...outletKeys.lists(), { page, limit }]
+        : outletKeys.lists(),
+    queryFn: () => outletApi.list(page as any, limit as any),
+    enabled,
   })
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/utils/axiosInstance"
 
 export const OrderStatus = {
@@ -72,6 +73,22 @@ export const orderApi = {
     if (endDate) params.append("endDate", endDate)
     const query = params.toString() ? `?${params.toString()}` : ""
     return axiosInstance.get<any>(`/order${query}`).then((r) => r.data)
+  },
+  live: (
+    outletId?: string,
+    startDate?: string,
+    endDate?: string,
+    page?: number,
+    limit?: number
+  ) => {
+    const params = new URLSearchParams()
+    if (outletId) params.append("outletId", outletId)
+    if (startDate) params.append("startDate", startDate)
+    if (endDate) params.append("endDate", endDate)
+    if (page) params.append("page", page.toString())
+    if (limit) params.append("limit", limit.toString())
+    const query = params.toString() ? `?${params.toString()}` : ""
+    return axiosInstance.get<any>(`/order/live${query}`).then((r) => r.data)
   },
   sales: (
     page?: number,

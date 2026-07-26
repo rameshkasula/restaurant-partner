@@ -62,11 +62,39 @@ export interface UpdateUserPayload {
   status?: UserStatus
 }
 
+export interface PaginatedUsers {
+  data: User[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    skip: number
+    totalPages: number
+  }
+}
+
 // ── API Functions ─────────────────────────────────────────────────────────────
 export const userApi = {
-  list: async (includeDeleted = false): Promise<User[]> => {
-    const params = includeDeleted ? "?includeDeleted=true" : ""
-    const res = await axiosInstance.get(`/user${params}`)
+  list: async (
+    includeDeleted = false,
+    page?: number,
+    limit?: number
+  ): Promise<any> => {
+    const params = new URLSearchParams()
+    if (includeDeleted) params.append("includeDeleted", "true")
+    if (page !== undefined) params.append("page", page.toString())
+    if (limit !== undefined) params.append("limit", limit.toString())
+
+    if (page !== undefined && limit !== undefined) {
+      const res = await axiosInstance.get(`/user?${params.toString()}`)
+      return res.data
+    }
+
+    params.append("limit", "1000")
+    const res = await axiosInstance.get(`/user?${params.toString()}`)
+    if (res.data && Array.isArray(res.data.data)) {
+      return res.data.data
+    }
     return res.data
   },
 

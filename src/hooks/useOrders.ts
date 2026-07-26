@@ -4,6 +4,7 @@ import {
   type CreateOrderDto,
   type UpdateOrderDto,
 } from "@/api/orders.api"
+import { getDefaultDateRangeStrings } from "@/utils/formatters"
 
 export const orderKeys = {
   all: ["orders"] as const,
@@ -21,6 +22,18 @@ export const orderKeys = {
   details: () => [...orderKeys.all, "detail"] as const,
   detail: (id: string) => [...orderKeys.details(), id] as const,
   sales: () => [...orderKeys.all, "sales"] as const,
+  saleList: (
+    page?: number,
+    limit?: number,
+    outletId?: string,
+    includeDeleted?: boolean,
+    startDate?: string,
+    endDate?: string
+  ) =>
+    [
+      ...orderKeys.sales(),
+      { page, limit, outletId, includeDeleted, startDate, endDate },
+    ] as const,
   sale: (id: string) => [...orderKeys.sales(), id] as const,
 }
 
@@ -30,9 +43,37 @@ export function useOrders(
   startDate?: string,
   endDate?: string
 ) {
+  const defaults = getDefaultDateRangeStrings()
+  const sDate = startDate ?? defaults.startDate
+  const eDate = endDate ?? defaults.endDate
+
   return useQuery({
-    queryKey: orderKeys.list(outletId, includeDeleted, startDate, endDate),
-    queryFn: () => orderApi.list(outletId, includeDeleted, startDate, endDate),
+    queryKey: orderKeys.list(outletId, includeDeleted, sDate, eDate),
+    queryFn: () => orderApi.list(outletId, includeDeleted, sDate, eDate),
+  })
+}
+
+// use Live Orders (polling supported)
+export function useLiveOrders(
+  outletId?: string,
+  startDate?: string,
+  endDate?: string,
+  page?: number,
+  limit?: number,
+  refetchInterval: number | false = 6000
+) {
+  const defaults = getDefaultDateRangeStrings()
+  const sDate = startDate ?? defaults.startDate
+  const eDate = endDate ?? defaults.endDate
+
+  return useQuery({
+    queryKey: [
+      ...orderKeys.all,
+      "live",
+      { outletId, startDate: sDate, endDate: eDate, page, limit },
+    ],
+    queryFn: () => orderApi.live(outletId, sDate, eDate, page, limit),
+    refetchInterval,
   })
 }
 
@@ -45,17 +86,21 @@ export function useSales(
   startDate?: string,
   endDate?: string
 ) {
+  const defaults = getDefaultDateRangeStrings()
+  const sDate = startDate ?? defaults.startDate
+  const eDate = endDate ?? defaults.endDate
+
   return useQuery({
-    queryKey: orderKeys.sales(
+    queryKey: orderKeys.saleList(
       page,
       limit,
       outletId,
       includeDeleted,
-      startDate,
-      endDate
+      sDate,
+      eDate
     ),
     queryFn: () =>
-      orderApi.sales(page, limit, outletId, includeDeleted, startDate, endDate),
+      orderApi.sales(page, limit, outletId, includeDeleted, sDate, eDate),
   })
 }
 
@@ -74,11 +119,31 @@ export function useUpdateOrder() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateOrderDto }) =>
       orderApi.update(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
-      queryClient.invalidateQueries({
-        queryKey: orderKeys.detail(variables.id),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: orderKeys.all })
+
+      // Optimistically update all lists/live/sales queries
+      queryClient.setQueriesData({ queryKey: orderKeys.all }, (oldData: any) => {
+        if (!oldData) return oldData
+        if (Array.isArray(oldData)) {
+          return oldData.map((order: any) =>
+            order._id === variables.id ? { ...order, ...variables.data } : order
+          )
+        }
+        if (oldData.data && Array.isArray(oldData.data)) {
+          return {
+            ...oldData,
+            data: oldData.data.map((order: any) =>
+              order._id === variables.id ? { ...order, ...variables.data } : order
+            )
+          }
+        }
+        return oldData
       })
+    },
+    onSettled: () => {
+      // Re-fetch all order queries to ensure client is in sync with server
+      queryClient.invalidateQueries({ queryKey: orderKeys.all })
     },
   })
 }

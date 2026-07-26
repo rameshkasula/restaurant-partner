@@ -27,19 +27,47 @@ export function normalizeRole(roleStr: string): string {
   return upper.replace(/[\s-]/g, "_")
 }
 
+function parseJwtPayload(token: string): any {
+  try {
+    const base64Url = token.split(".")[1]
+    if (!base64Url) return null
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
 export function useNavigation() {
   const userRole = useMemo(() => {
-    const token = getAccessToken()
-    if (!token) return null
+    // 1. Try reading stored user_info from localStorage
     try {
-      const decoded = atob(token)
-      const parts = decoded.split(":")
-      if (parts.length >= 2) {
-        return normalizeRole(parts[1])
+      const stored = localStorage.getItem("user_info")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed?.role) {
+          return normalizeRole(parsed.role)
+        }
       }
-    } catch (e) {
+    } catch {
       // Fail silently
     }
+
+    // 2. Fallback: Parse JWT payload from accessToken
+    const token = getAccessToken()
+    if (!token) return null
+    
+    const payload = parseJwtPayload(token)
+    if (payload?.role) {
+      return normalizeRole(payload.role)
+    }
+
     return null
   }, [])
 

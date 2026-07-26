@@ -10,3 +10,11 @@ export const removeAccessToken = () => removeCookie(ACCESS_TOKEN_KEY);
 export const setRefreshToken = (token: string) => setCookie(REFRESH_TOKEN_KEY, token);
 export const getRefreshToken = () => getCookie(REFRESH_TOKEN_KEY);
 export const removeRefreshToken = () => removeCookie(REFRESH_TOKEN_KEY);
+
+export const clearAllAuthData = () => {
+  removeAccessToken();
+  removeRefreshToken();
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user_info');
+  }
+};

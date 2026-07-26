@@ -8,7 +8,7 @@ import { useCreateOutlet, useUpdateOutlet } from "@/hooks/useOutlets"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   Dialog,
@@ -22,15 +22,6 @@ import {
 } from "@/components/ui/dialog"
 import { IconPlus, IconPencil, IconAlertCircle, IconLoader2 } from "@tabler/icons-react"
 import { toast } from "sonner"
-
-function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
 
 function InlineError({ error }: { error?: string }) {
   if (!error) return null
@@ -94,7 +85,9 @@ export function CreateOutletDialog() {
           reset()
         },
         onError: (err: any) => {
-          setApiError(err.message || "Failed to create outlet.")
+          const msg = err.message || "Failed to create outlet."
+          setApiError(msg)
+          toast.error(msg)
         },
       }
     )
@@ -253,6 +246,14 @@ export function CreateOutletDialog() {
   )
 }
 
+function getOrgIdString(val: any): string {
+  if (!val) return ""
+  if (typeof val === "object" && val !== null) {
+    return val._id || val.id || ""
+  }
+  return String(val)
+}
+
 interface EditOutletDialogProps {
   outlet: Outlet
 }
@@ -269,7 +270,7 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
   const { register, handleSubmit, reset, formState: { errors } } = useForm<OutletFormData>({
     defaultValues: {
       name: outlet.name,
-      organizationId: outlet.organizationId || "",
+      organizationId: getOrgIdString(outlet.organizationId),
       address: outlet.address || "",
       isCustomerapp: outlet.isCustomerapp ? "true" : "false",
       gstin: outlet.gstin || "",
@@ -283,7 +284,7 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
     if (open) {
       reset({
         name: outlet.name,
-        organizationId: outlet.organizationId || "",
+        organizationId: getOrgIdString(outlet.organizationId),
         address: outlet.address || "",
         isCustomerapp: outlet.isCustomerapp ? "true" : "false",
         gstin: outlet.gstin || "",
@@ -301,7 +302,7 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
     // Check if anything actually changed
     const hasChanged = 
       data.name.trim() !== outlet.name ||
-      data.organizationId !== (outlet.organizationId || "") ||
+      data.organizationId !== getOrgIdString(outlet.organizationId) ||
       data.address.trim() !== (outlet.address || "") ||
       (data.isCustomerapp === "true") !== (outlet.isCustomerapp ?? false) ||
       data.gstin.trim() !== (outlet.gstin || "") ||
@@ -333,7 +334,9 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
           setApiError("")
         },
         onError: (err: any) => {
-          setApiError(err.message || "Failed to update outlet.")
+          const msg = err.message || "Failed to update outlet."
+          setApiError(msg)
+          toast.error(msg)
         },
       }
     )

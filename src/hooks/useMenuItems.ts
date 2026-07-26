@@ -9,10 +9,11 @@ export const menuItemKeys = {
   detail: (id: string) => [...menuItemKeys.details(), id] as const,
 }
 
-export function useMenuItems(outletId?: string, includeDeleted = false) {
+export function useMenuItems(outletId?: string, includeDeleted = false, enabled = true) {
   return useQuery({
     queryKey: menuItemKeys.list(outletId, includeDeleted),
     queryFn: () => menuItemApi.list(outletId, includeDeleted),
+    enabled,
   })
 }
 

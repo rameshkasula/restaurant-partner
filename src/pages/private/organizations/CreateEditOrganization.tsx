@@ -6,7 +6,7 @@ import { useCreateOrganization, useUpdateOrganization } from "@/hooks/useOrganiz
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import {
   Dialog,
   DialogContent,
@@ -19,15 +19,6 @@ import {
 } from "@/components/ui/dialog"
 import { IconPlus, IconPencil, IconAlertCircle, IconLoader2 } from "@tabler/icons-react"
 import { toast } from "sonner"
-
-function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
 
 function InlineError({ error }: { error?: string }) {
   if (!error) return null
@@ -64,7 +55,9 @@ export function CreateOrgDialog() {
         reset()
       },
       onError: (err: any) => {
-        setApiError(err.message || "Failed to create organization.")
+        const msg = err.message || "Failed to create organization."
+        setApiError(msg)
+        toast.error(msg)
       }
     })
   }
@@ -172,7 +165,9 @@ export function EditOrgDialog({ org }: EditOrgDialogProps) {
           setApiError("")
         },
         onError: (err: any) => {
-          setApiError(err.message || "Failed to update organization.")
+          const msg = err.message || "Failed to update organization."
+          setApiError(msg)
+          toast.error(msg)
         }
       }
     )

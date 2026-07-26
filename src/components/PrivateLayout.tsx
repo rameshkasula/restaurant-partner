@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { APP_PATHS } from "@/router/paths"
 import { useNavigation } from "@/hooks/useNavigation"
 import { NAV_ITEMS } from "@/utils/permissions"
+import { UserRole, USER_ROLE_LABELS } from "@/api/users.api"
 
 export default function PrivateLayout() {
   const navigate = useNavigate()
@@ -25,34 +26,94 @@ export default function PrivateLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const { navItems } = useNavigation()
 
-  // Get current user info from token
-  const [userInfo, setUserInfo] = useState({
-    email: "Admin",
-    role: "User",
-  })
+  // Helper to format role name cleanly
+  const formatRole = (rawRole?: string): string => {
+    if (!rawRole) return "User"
+    const upper = rawRole.toUpperCase() as UserRole
+    if (USER_ROLE_LABELS[upper]) {
+      return USER_ROLE_LABELS[upper]
+    }
+    return (
+      rawRole
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (l) => l.toUpperCase()) || "User"
+    )
+  }
 
-  useEffect(() => {
+  const loadUserInfo = () => {
+    // 1. Try reading stored user_info from localStorage
+    try {
+      const stored = localStorage.getItem("user_info")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed?.email || parsed?.role) {
+          return {
+            email: parsed.email || "Admin",
+            role: formatRole(parsed.role),
+          }
+        }
+      }
+    } catch {
+      // Fail silently
+    }
+
+    // 2. Fallback: Parse JWT token or decoded token
     const token = getAccessToken()
     if (token) {
       try {
-        const decoded = atob(token)
-        const parts = decoded.split(":")
-        if (parts.length >= 2) {
-          const email = parts[0]
-          const role = parts[1] === "superadmin" ? "Super Admin" : parts[1]
-          setUserInfo({ email, role })
+        let email = "Admin"
+        let rawRole = "User"
+
+        if (token.includes(".")) {
+          const base64Url = token.split(".")[1]
+          if (base64Url) {
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
+            const jsonPayload = decodeURIComponent(
+              atob(base64)
+                .split("")
+                .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                .join("")
+            )
+            const payload = JSON.parse(jsonPayload)
+            email = payload?.email || payload?.sub || "Admin"
+            rawRole = payload?.role || "User"
+          }
+        } else {
+          const decoded = atob(token)
+          const parts = decoded.split(":")
+          if (parts.length >= 2) {
+            email = parts[0]
+            rawRole = parts[1]
+          }
+        }
+
+        return {
+          email,
+          role: formatRole(rawRole),
         }
       } catch (e) {
         // Fail silently
       }
     }
-  }, [])
+
+    return { email: "Admin", role: "User" }
+  }
+
+  // Initializing state directly from localStorage / token
+  const [userInfo, setUserInfo] = useState<{ email: string; role: string }>(loadUserInfo)
+
+  useEffect(() => {
+    setUserInfo(loadUserInfo())
+  }, [location.pathname])
 
   // Route guard: Redirect to dashboard if the user tries to access a nav route they are not authorized for
   useEffect(() => {
     if (navItems.length > 0) {
       const isAllowed = navItems.some((item) => item.path === location.pathname)
-      const isNavPath = NAV_ITEMS.some((item) => item.path === location.pathname)
+      const isNavPath = NAV_ITEMS.some(
+        (item) => item.path === location.pathname
+      )
       if (isNavPath && !isAllowed) {
         navigate(APP_PATHS.DASHBOARD)
       }
@@ -68,13 +129,11 @@ export default function PrivateLayout() {
     removeAccessToken()
     localStorage.removeItem("user_info")
     toast.success("Successfully logged out.")
-    navigate("/login")
+    navigate(APP_PATHS.LOGIN)
   }
 
   // Find active navigation label to display in header title
-  const activeNavItem = navItems.find(
-    (item) => item.path === location.pathname
-  )
+  const activeNavItem = navItems.find((item) => item.path === location.pathname)
   const headerTitle = activeNavItem ? activeNavItem.label : "Portal"
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")

@@ -11,6 +11,7 @@ import { useOrders } from "@/hooks/useOrders"
 import { useMenuItems } from "@/hooks/useMenuItems"
 import { OrderStatus, PaymentMode, type Order } from "@/api/orders.api"
 import { getAccessToken } from "@/utils/tokens"
+import { getDefaultDateRange } from "@/utils/formatters"
 import { useOutletStore } from "@/store/outletStore"
 
 // Subcomponents
@@ -33,7 +34,8 @@ interface CurrentUserProfile {
 }
 
 function useCurrentUserProfile() {
-  const { data: users = [] } = useUsers()
+  const hasUserInfo = typeof window !== "undefined" && !!localStorage.getItem("user_info")
+  const { data: users = [] } = useUsers(false, !hasUserInfo)
 
   return useMemo<CurrentUserProfile | null>(() => {
     try {
@@ -99,10 +101,7 @@ export default function Analytics() {
   const { selectedOutlet, setSelectedOutlet } = useOutletStore()
 
   // Date Range filter managed locally
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: dayjs().subtract(7, "day").startOf("day").toDate(),
-    to: dayjs().endOf("day").toDate(),
-  })
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(getDefaultDateRange())
 
   // Format dates for API query
   const startDateParam = useMemo(() => {
@@ -139,7 +138,7 @@ export default function Analytics() {
     startDateParam,
     endDateParam
   )
-  const { data: menuItems = [] } = useMenuItems(activeOutletId ?? undefined)
+  const { data: menuItems = [] } = useMenuItems(activeOutletId ?? undefined, false, false)
 
   // Safely extract the raw orders array from nested API structure
   const ordersArray = useMemo<Order[]>(() => {

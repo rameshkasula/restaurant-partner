@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -244,9 +245,12 @@ export default function ResetPassword() {
       // TODO: replace with real API — POST /auth/reset-password
       // Pass email from location.state and the new password
       await new Promise((r) => setTimeout(r, 1200));
+      toast.success('Password updated successfully! Please sign in with your new password.');
       setStep('success');
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

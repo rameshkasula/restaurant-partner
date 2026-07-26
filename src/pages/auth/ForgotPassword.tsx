@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,9 +90,12 @@ function EmailStep({ onNext }: { onNext: (email: string) => void }) {
     try {
       // TODO: replace with real API — POST /auth/forgot-password
       await new Promise((r) => setTimeout(r, 1200));
+      toast.success("Verification code sent to your email!");
       onNext(email.trim());
     } catch (err: unknown) {
-      setApiError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setApiError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -182,9 +186,12 @@ function OtpStep({
       // TODO: replace with real API — POST /auth/verify-reset-otp
       await new Promise((r) => setTimeout(r, 1000));
       if (otp === '000000') throw new Error('Invalid verification code. Please try again.');
+      toast.success("Verification code verified successfully!");
       onSuccess();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Verification failed. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -197,6 +204,7 @@ function OtpStep({
     await new Promise((r) => setTimeout(r, 800));
     setResending(false);
     setOtp('');
+    toast.info("Resent verification code to your email.");
     start();
   }
 

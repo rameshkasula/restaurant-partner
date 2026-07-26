@@ -42,11 +42,14 @@ export interface DataTableProps<T> {
   virtualized?: boolean
   rowHeight?: number
   containerMaxHeight?: string
+  maxHeight?: string
+  stickyHeader?: boolean
   onRowClick?: (row: T) => void
   emptyState?: React.ReactNode
   title?: React.ReactNode
   icon?: React.ReactNode
   headerActions?: React.ReactNode
+  containerClassName?: string
 }
 
 export function DataTable<T>({
@@ -62,12 +65,15 @@ export function DataTable<T>({
   pageSizeOptions = [10, 20, 50, 100],
   virtualized = false,
   rowHeight = 52,
-  containerMaxHeight = "480px",
+  containerMaxHeight,
+  maxHeight,
+  stickyHeader = true,
   onRowClick,
   emptyState,
   title,
   icon,
   headerActions,
+  containerClassName,
 }: DataTableProps<T>) {
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
@@ -195,11 +201,16 @@ export function DataTable<T>({
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardContent className="pt-6">
+    <Card
+      className={cn(
+        "flex w-full flex-col overflow-hidden shadow-sm border-border/40",
+        containerClassName
+      )}
+    >
+      <CardContent className="flex flex-1 flex-col overflow-hidden p-0">
         {/* ── Table Top Search Bar & Header Actions ── */}
         {(searchable || title || icon || headerActions) && (
-          <div className="mb-4 flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-4 border-b p-4 md:flex-row md:items-center md:justify-between">
             {(title || icon) && (
               <div className="flex items-center gap-2">
                 {icon}
@@ -232,22 +243,28 @@ export function DataTable<T>({
           </div>
         )}
 
-        {/* ── Table Container ── */}
-        <div
-          ref={virtualized ? containerRef : undefined}
-          style={
-            virtualized
-              ? { maxHeight: containerMaxHeight, overflowY: "auto" }
-              : undefined
-          }
-          className={cn("w-full overflow-x-auto", virtualized && "relative")}
-        >
-          <Table>
-            <TableHeader
-              className={cn(
-                virtualized && "sticky top-0 z-10 bg-muted/90 backdrop-blur-md"
-              )}
+        {/* ── Table Container (Scrollable strictly inside table card) ── */}
+        {(() => {
+          const effectiveMaxHeight = maxHeight || containerMaxHeight
+          
+          return (
+            <div
+              ref={virtualized ? containerRef : undefined}
+              style={
+                effectiveMaxHeight
+                  ? { maxHeight: effectiveMaxHeight }
+                  : undefined
+              }
+              className="flex-1 overflow-y-auto overflow-x-auto scrollbar-thin w-full"
             >
+              <Table className="w-full border-collapse">
+                <TableHeader
+                  className={cn(
+                    "border-b",
+                    stickyHeader &&
+                      "sticky top-0 z-20 bg-card shadow-xs backdrop-blur-md"
+                  )}
+                >
               <TableRow className="border-b hover:bg-transparent">
                 {columns.map((col, idx) => (
                   <TableHead
@@ -405,6 +422,8 @@ export function DataTable<T>({
             </TableBody>
           </Table>
         </div>
+      )
+    })()}
 
         {/* ── Table Pagination ── */}
         {pagination && !virtualized && !loading && totalEntries > 0 && (

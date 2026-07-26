@@ -2,8 +2,10 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import axios from "axios"
+import { toast } from "sonner"
 import { useLogin } from "@/hooks/useAuth"
 import type { LoginDto } from "@/api/auth.api"
+import { UserRole } from "@/api/users.api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -49,21 +51,41 @@ export default function Login() {
   const onSubmit = async (data: LoginDto) => {
     setApiError("")
     try {
-      await loginRequest(data)
-      navigate("/dashboard")
+      const res = await loginRequest(data)
+
+      console.log("Login Response -", res)
+      if (res?.user) {
+        localStorage.setItem("user_info", JSON.stringify(res.user))
+      }
+      toast.success("Welcome back! Logged in successfully.")
+      const role = (res?.user?.role || "").toUpperCase()
+      if (
+        role === UserRole.SUPER_ADMIN ||
+        role === UserRole.PLATFORM_MANAGER ||
+        role === "SUPER_ADMIN" ||
+        role === "PLATFORM_MANAGER"
+      ) {
+        navigate("/dashboard")
+      } else {
+        navigate("/analytics")
+      }
     } catch (err: unknown) {
       let errMsg = "Something went wrong. Please try again."
       if (axios.isAxiosError(err) && err.response?.data) {
         const resData = err.response.data as { message?: string | string[] }
         if (typeof resData.message === "string") {
           errMsg = resData.message
-        } else if (Array.isArray(resData.message) && resData.message.length > 0) {
+        } else if (
+          Array.isArray(resData.message) &&
+          resData.message.length > 0
+        ) {
           errMsg = resData.message[0]
         }
       } else if (err instanceof Error) {
         errMsg = err.message
       }
       setApiError(errMsg)
+      toast.error(errMsg)
     }
   }
 
@@ -74,7 +96,8 @@ export default function Login() {
         aria-hidden
         className="pointer-events-none fixed top-0 left-1/2 h-[400px] w-[600px] -translate-x-1/2 opacity-20"
         style={{
-          background: "radial-gradient(circle, var(--color-primary) 0%, transparent 65%)",
+          background:
+            "radial-gradient(circle, var(--color-primary) 0%, transparent 65%)",
           filter: "blur(80px)",
         }}
       />
@@ -96,7 +119,11 @@ export default function Login() {
           <Separator />
 
           <CardContent className="pt-5">
-            <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+              className="flex flex-col gap-4"
+            >
               {apiError && (
                 <Alert variant="destructive">
                   <IconAlertCircle className="size-4" stroke={2} />
@@ -145,7 +172,10 @@ export default function Login() {
               {/* Password */}
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="font-medium text-foreground">
+                  <Label
+                    htmlFor="password"
+                    className="font-medium text-foreground"
+                  >
                     Password
                   </Label>
                   <Link
@@ -165,7 +195,7 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     aria-invalid={!!errors.password}
-                    className="pl-8 pr-9"
+                    className="pr-9 pl-8"
                     autoComplete="current-password"
                     {...register("password", {
                       required: "Password is required.",
@@ -181,7 +211,9 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {showPassword ? (
@@ -199,7 +231,11 @@ export default function Login() {
                 )}
               </div>
 
-              <Button type="submit" className="mt-2 w-full gap-2" disabled={loading}>
+              <Button
+                type="submit"
+                className="mt-2 w-full gap-2"
+                disabled={loading}
+              >
                 {loading ? (
                   <>
                     <IconLoader2 className="size-4 animate-spin" stroke={2} />
@@ -215,7 +251,10 @@ export default function Login() {
 
               <p className="text-center text-[11px] text-muted-foreground">
                 Don't have an account?{" "}
-                <Link to="/register" className="font-medium text-primary hover:underline">
+                <Link
+                  to="/register"
+                  className="font-medium text-primary hover:underline"
+                >
                   Request Early Access
                 </Link>
               </p>
@@ -225,11 +264,17 @@ export default function Login() {
 
         <p className="mt-5 text-center text-[11px] text-muted-foreground">
           By signing in, you agree to our{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-foreground">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
             Terms
           </a>{" "}
           &amp;{" "}
-          <a href="#" className="underline underline-offset-4 hover:text-foreground">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
             Privacy Policy
           </a>
         </p>

@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
 // ── Tabler icons ──────────────────────────────────────────────────────────────
@@ -31,7 +31,6 @@ import {
   IconRefresh,
   IconBuildingStore,
   IconLoader2,
-  IconAlertCircle,
   IconSearch,
   IconChevronRight,
   IconDoorExit,
@@ -50,27 +49,12 @@ import {
 } from "@/hooks/useOrganizations"
 import { CreateOrgDialog, EditOrgDialog } from "./CreateEditOrganization"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
+import { ErrorMsg } from "@/components/ErrorMsg"
+import { formatDate } from "@/utils/formatters"
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SMALL HELPERS
 // ═══════════════════════════════════════════════════════════════════════════
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
-}
-
-function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
 
 function SkeletonRows() {
   return (
@@ -113,7 +97,10 @@ function OrgOutlets({
   orgId: string
   allOutlets: Outlet[]
 }) {
-  const outlets = allOutlets.filter((o) => o.organizationId === orgId)
+  const outlets = allOutlets.filter((o) => {
+    const oOrgId = typeof o.organizationId === "object" && o.organizationId !== null ? o.organizationId._id || o.organizationId.id : o.organizationId
+    return oOrgId === orgId
+  })
 
   const deleteMutation = useDeleteOutlet()
   const restoreMutation = useRestoreOutlet()

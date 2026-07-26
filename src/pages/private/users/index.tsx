@@ -3,23 +3,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Card } from "@/components/ui/card"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DataTable, type ColumnDef } from "@/components/DataTable/DataTable"
+import { Pagination } from "@/components/DataTable/Pagination"
+
 import {
   IconTrash,
   IconRefresh,
   IconUsers,
   IconLoader2,
-  IconAlertCircle,
   IconSearch,
   IconShieldCheck,
   IconBuildingStore,
@@ -28,6 +19,7 @@ import {
   IconCircleX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import { cn } from "@/lib/utils"
 import { UserRole, USER_ROLE_LABELS, UserStatus } from "@/api/users.api"
 import { useUsers, useDeleteUser, useRestoreUser, useUpdateUserStatus } from "@/hooks/useUsers"
@@ -117,52 +109,6 @@ function StatusBadge({ isDeleted }: { isDeleted: boolean }) {
   )
 }
 
-function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
-
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <TableRow key={i}>
-          <TableCell>
-            <div className="flex flex-col gap-1">
-              <Skeleton className="h-4 w-44" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-5 w-28 rounded-full" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-4 w-32" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-4 w-28" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-5 w-16 rounded-full" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-4 w-16" />
-          </TableCell>
-          <TableCell className="text-right">
-            <div className="flex justify-end gap-1">
-              <Skeleton className="h-7 w-7 rounded" />
-              <Skeleton className="h-7 w-7 rounded" />
-            </div>
-          </TableCell>
-        </TableRow>
-      ))}
-    </>
-  )
-}
 
 // ── Role filter pills ─────────────────────────────────────────────────────────
 
@@ -183,13 +129,26 @@ export default function Users() {
   const [showDeleted, setShowDeleted] = useState(false)
   const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL")
 
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+
   // ── Data ──────────────────────────────────────────────────────────────────
   const {
-    data: users = [],
+    data: paginatedData,
     isLoading,
     isError,
     refetch,
-  } = useUsers(showDeleted)
+  } = useUsers(showDeleted, page, limit)
+
+  // Fetch all users in the background to calculate stats (total, active, deleted)
+  const { data: allUsers = [] } = useUsers(showDeleted)
+
+  const users = paginatedData?.data || []
+  const paginationMeta = paginatedData?.pagination
+
+  React.useEffect(() => {
+    setPage(1)
+  }, [showDeleted, roleFilter, search])
 
   const { data: orgs = [] } = useOrganizations()
   const { data: outlets = [] } = useOutlets()
@@ -228,9 +187,213 @@ export default function Users() {
     return matchesSearch && matchesRole
   })
 
+  // Map user data for search & lookup in DataTable
+  const displayedUsers = React.useMemo(() => {
+    return filtered.map((u) => {
+      const orgName = u.organizationId ? (orgMap[u.organizationId] ?? "—") : "—"
+      const outletName = u.outletId ? (outletMap[u.outletId] ?? "—") : "—"
+      return {
+        ...u,
+        orgName,
+        outletName,
+      }
+    })
+  }, [filtered, orgMap, outletMap])
+
+  // ── Columns for DataTable ──────────────────────────────────────────────
+  const columns = React.useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        header: "User",
+        accessorKey: "email",
+        sortable: true,
+        cell: ({ row: user }) => (
+          <span className="text-sm font-medium text-foreground">
+            {user.email}
+          </span>
+        ),
+      },
+      {
+        header: "Role",
+        accessorKey: "role",
+        sortable: true,
+        cell: ({ row: user }) => <RoleBadge role={user.role} />,
+      },
+      {
+        header: "Organization",
+        accessorKey: "orgName",
+        sortable: true,
+        cell: ({ row: user }) => {
+          const orgName = user.orgName !== "—" ? user.orgName : null
+          if (orgName) {
+            return (
+              <span className="flex items-center gap-1 text-xs">
+                <IconBuildingStore
+                  className="size-3.5 shrink-0 text-muted-foreground"
+                  stroke={1.75}
+                />
+                <span className="max-w-[140px] truncate" title={orgName}>
+                  {orgName}
+                </span>
+              </span>
+            )
+          }
+          return <span className="text-xs italic text-muted-foreground">—</span>
+        },
+      },
+      {
+        header: "Outlet",
+        accessorKey: "outletName",
+        sortable: true,
+        cell: ({ row: user }) => {
+          const outletName = user.outletName !== "—" ? user.outletName : null
+          if (outletName) {
+            return (
+              <span className="flex items-center gap-1 text-xs">
+                <IconMapPin
+                  className="size-3.5 shrink-0 text-muted-foreground"
+                  stroke={1.75}
+                />
+                <span className="max-w-[140px] truncate" title={outletName}>
+                  {outletName}
+                </span>
+              </span>
+            )
+          }
+          return <span className="text-xs italic text-muted-foreground">—</span>
+        },
+      },
+      {
+        header: "Status",
+        accessorKey: "status",
+        sortable: true,
+        cell: ({ row: user }) => {
+          const userId = user._id || user.id || ""
+          const deleted = user.isDeleted
+          if (deleted) {
+            return <StatusBadge isDeleted={true} />
+          }
+
+          const currentStatus = (user.status || UserStatus.ACTIVE) as UserStatus
+          const statusInfo =
+            USER_STATUS_STYLES[currentStatus] || USER_STATUS_STYLES[UserStatus.ACTIVE]
+
+          const handleStatusChange = async (newStatus: any) => {
+            if (!newStatus) return
+            try {
+              await updateStatusMutation.mutateAsync({
+                id: userId,
+                status: newStatus,
+              })
+              toast.success("User status updated successfully.")
+            } catch {
+              toast.error("Failed to update user status.")
+            }
+          }
+
+          return (
+            <Select value={currentStatus} onValueChange={handleStatusChange}>
+              <SelectTrigger
+                className={cn(
+                  "h-6 rounded-md px-2 font-medium shadow-none hover:bg-muted/50 border-0 flex items-center justify-between min-w-[110px] w-fit text-xs cursor-pointer",
+                  statusInfo.badgeClass
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover text-popover-foreground border border-border shadow-md rounded-md p-1 min-w-[130px]">
+                {Object.entries(USER_STATUS_STYLES).map(([value, info]) => (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="cursor-pointer hover:bg-accent hover:text-accent-foreground py-1 px-2.5 rounded-sm flex items-center text-xs"
+                  >
+                    <span
+                      className={cn("inline-block w-2.5 h-2.5 rounded-full mr-2 shrink-0", info.dotClass)}
+                    />
+                    {info.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        },
+      },
+      {
+        header: "Created At",
+        accessorKey: "createdAt",
+        sortable: true,
+        cell: ({ row: user }) => (
+          <span className="text-xs text-muted-foreground">
+            {formatDate(user.createdAt)}
+          </span>
+        ),
+      },
+      {
+        header: "Actions",
+        className: "text-right pr-4",
+        cell: ({ row: user }) => {
+          const userId = user._id || user.id || ""
+          const deleted = user.isDeleted
+          return (
+            <div className="flex items-center justify-end gap-1">
+              {deleted ? (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Restore user"
+                  disabled={restoreMutation.isPending}
+                  onClick={() => restoreMutation.mutate(userId)}
+                >
+                  {restoreMutation.isPending ? (
+                    <IconLoader2
+                      className="size-3.5 animate-spin"
+                      stroke={2}
+                    />
+                  ) : (
+                    <IconRefresh className="size-3.5" stroke={1.75} />
+                  )}
+                </Button>
+              ) : (
+                <>
+                  <EditUserDialog user={user} orgs={orgs} outlets={outlets} />
+                  <DeleteConfirmDialog
+                    title="Delete User"
+                    itemName={user.email}
+                    description={`Are you sure you want to soft-delete "${user.email}"? You can restore them later.`}
+                    onConfirm={async () => {
+                      try {
+                        await deleteMutation.mutateAsync(userId)
+                        toast.success("User deleted successfully.")
+                      } catch {
+                        toast.error("Failed to delete user.")
+                      }
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Delete ${user.email}`}
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <IconTrash className="size-3.5" stroke={1.75} />
+                      </Button>
+                    }
+                  />
+                </>
+              )}
+            </div>
+          )
+        },
+      },
+    ],
+    [orgMap, outletMap, orgs, outlets, restoreMutation.isPending, updateStatusMutation, deleteMutation]
+  )
+
   // ── Stats ─────────────────────────────────────────────────────────────────
-  const activeCount = users.filter((u) => !u.isDeleted).length
-  const deletedCount = users.filter((u) => u.isDeleted).length
+  const activeCount = allUsers.filter((u) => !u.isDeleted).length
+  const deletedCount = allUsers.filter((u) => u.isDeleted).length
+  const totalUsersCount = allUsers.length
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -254,7 +417,7 @@ export default function Users() {
               stroke={1.75}
             />
           </Button>
-          <CreateUserDialog />
+          <CreateUserDialog orgs={orgs} outlets={outlets} />
         </div>
       </div>
 
@@ -275,7 +438,7 @@ export default function Users() {
         <div className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs">
           <IconUsers className="size-3.5 text-muted-foreground" stroke={1.75} />
           <span className="text-muted-foreground">Total:</span>
-          <span className="font-semibold tabular-nums text-foreground">{users.length}</span>
+          <span className="font-semibold tabular-nums text-foreground">{totalUsersCount}</span>
         </div>
       </div>
 
@@ -336,204 +499,40 @@ export default function Users() {
       )}
 
       {/* ── Table ── */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Outlet</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="pr-2 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <SkeletonRows />
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={7}
-                  className="py-14 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <IconUsers className="size-9 opacity-25" stroke={1.25} />
-                    <p className="text-xs">
-                      {search || roleFilter !== "ALL"
-                        ? "No users match your filters."
-                        : "No users yet."}
-                    </p>
-                    {!search && roleFilter === "ALL" && <CreateUserDialog />}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((user) => {
-                const userId = user._id || user.id || ""
-                const deleted = user.isDeleted
-                const orgName = user.organizationId
-                  ? (orgMap[user.organizationId] ?? "—")
-                  : null
-                const outletName = user.outletId
-                  ? (outletMap[user.outletId] ?? "—")
-                  : null
-
-                return (
-                  <TableRow
-                    key={userId}
-                    className={cn(deleted && "opacity-55")}
-                  >
-                    {/* Email */}
-                    <TableCell>
-                      <span className="text-sm font-medium text-foreground">
-                        {user.email}
-                      </span>
-                    </TableCell>
-
-                    {/* Role */}
-                    <TableCell>
-                      <RoleBadge role={user.role} />
-                    </TableCell>
-
-                    {/* Organization */}
-                    <TableCell>
-                      {orgName ? (
-                        <span className="flex items-center gap-1 text-xs">
-                          <IconBuildingStore
-                            className="size-3.5 shrink-0 text-muted-foreground"
-                            stroke={1.75}
-                          />
-                          <span className="max-w-[140px] truncate" title={orgName}>
-                            {orgName}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-xs italic text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Outlet */}
-                    <TableCell>
-                      {outletName ? (
-                        <span className="flex items-center gap-1 text-xs">
-                          <IconMapPin
-                            className="size-3.5 shrink-0 text-muted-foreground"
-                            stroke={1.75}
-                          />
-                          <span className="max-w-[140px] truncate" title={outletName}>
-                            {outletName}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-xs italic text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Status */}
-                    <TableCell>
-                      {deleted ? (
-                        <StatusBadge isDeleted={true} />
-                      ) : (
-                        (() => {
-                          const currentStatus = user.status || UserStatus.ACTIVE
-                          const statusInfo = USER_STATUS_STYLES[currentStatus] || USER_STATUS_STYLES[UserStatus.ACTIVE]
-
-                          const handleStatusChange = async (newStatus: UserStatus | null) => {
-                            if (!newStatus) return
-                            try {
-                              await updateStatusMutation.mutateAsync({
-                                id: userId,
-                                status: newStatus,
-                              })
-                              toast.success("User status updated successfully.")
-                            } catch {
-                              toast.error("Failed to update user status.")
-                            }
-                          }
-
-                          return (
-                            <Select value={currentStatus} onValueChange={handleStatusChange}>
-                              <SelectTrigger className={cn("h-6 rounded-md px-2 font-medium shadow-none hover:bg-muted/50 border-0 flex items-center justify-between min-w-[110px] w-fit text-xs cursor-pointer", statusInfo.badgeClass)}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover text-popover-foreground border border-border shadow-md rounded-md p-1 min-w-[130px]">
-                                {Object.entries(USER_STATUS_STYLES).map(([value, info]) => (
-                                  <SelectItem key={value} value={value} className="cursor-pointer hover:bg-accent hover:text-accent-foreground py-1 px-2.5 rounded-sm flex items-center text-xs">
-                                    <span className={cn("inline-block w-2.5 h-2.5 rounded-full mr-2 shrink-0", info.dotClass)} />
-                                    {info.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )
-                        })()
-                      )}
-                    </TableCell>
-
-                    {/* Created */}
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDate(user.createdAt)}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell className="pr-2 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {deleted ? (
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label="Restore user"
-                            disabled={restoreMutation.isPending}
-                            onClick={() => restoreMutation.mutate(userId)}
-                          >
-                            {restoreMutation.isPending ? (
-                              <IconLoader2
-                                className="size-3.5 animate-spin"
-                                stroke={2}
-                              />
-                            ) : (
-                              <IconRefresh className="size-3.5" stroke={1.75} />
-                            )}
-                          </Button>
-                        ) : (
-                          <>
-                            <EditUserDialog user={user} />
-                            <DeleteConfirmDialog
-                              title="Delete User"
-                              itemName={user.email}
-                              description={`Are you sure you want to soft-delete "${user.email}"? You can restore them later.`}
-                              onConfirm={async () => {
-                                try {
-                                  await deleteMutation.mutateAsync(userId)
-                                  toast.success("User deleted successfully.")
-                                } catch {
-                                  toast.error("Failed to delete user.")
-                                }
-                              }}
-                              trigger={
-                                <Button
-                                  variant="ghost"
-                                  size="icon-sm"
-                                  aria-label={`Delete ${user.email}`}
-                                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                >
-                                  <IconTrash className="size-3.5" stroke={1.75} />
-                                </Button>
-                              }
-                            />
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
+      <DataTable
+        columns={columns}
+        data={displayedUsers}
+        loading={isLoading}
+        searchable={false}
+        pagination={false}
+        emptyState={
+          <div className="flex flex-col items-center gap-2 py-12 text-center text-muted-foreground">
+            <IconUsers className="size-9 opacity-25" stroke={1.25} />
+            <p className="text-xs">
+              {search || roleFilter !== "ALL"
+                ? "No users match your filters."
+                : "No users yet."}
+            </p>
+            {!search && roleFilter === "ALL" && (
+              <CreateUserDialog orgs={orgs} outlets={outlets} />
             )}
-          </TableBody>
-        </Table>
-      </Card>
+          </div>
+        }
+      />
+
+      {paginationMeta && displayedUsers.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={paginationMeta.totalPages}
+          pageSize={limit}
+          totalEntries={paginationMeta.total}
+          onPageChange={(p) => setPage(p)}
+          onPageSizeChange={(s) => {
+            setLimit(s)
+            setPage(1)
+          }}
+        />
+      )}
     </div>
   )
 }

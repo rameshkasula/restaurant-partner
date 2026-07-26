@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import {
   Dialog,
   DialogContent,
@@ -26,8 +26,6 @@ import {
 import { toast } from "sonner"
 import { UserRole, USER_ROLE_LABELS, type User } from "@/api/users.api"
 import { useCreateUser, useUpdateUser } from "@/hooks/useUsers"
-import { useOrganizations } from "@/hooks/useOrganizations"
-import { useOutlets } from "@/hooks/useOutlets"
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -41,14 +39,6 @@ function InlineError({ error }: { error?: string }) {
   )
 }
 
-function ErrorMsg({ message }: { message: string }) {
-  return (
-    <Alert variant="destructive" className="my-2">
-      <IconAlertCircle className="size-4" stroke={2} />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
-  )
-}
 
 // ── Form Data ─────────────────────────────────────────────────────────────────
 
@@ -70,6 +60,8 @@ interface UserDialogFormProps {
   isPending: boolean
   apiError: string
   isEdit?: boolean
+  orgs: any[]
+  outlets: any[]
 }
 
 function UserDialogForm({
@@ -80,10 +72,10 @@ function UserDialogForm({
   isPending,
   apiError,
   isEdit = false,
+  orgs = [],
+  outlets = [],
 }: UserDialogFormProps) {
   const [showPassword, setShowPassword] = useState(false)
-  const { data: orgs = [] } = useOrganizations()
-  const { data: outlets = [] } = useOutlets()
 
   const {
     register,
@@ -323,7 +315,7 @@ function UserDialogForm({
 
 // ── Create User Dialog ────────────────────────────────────────────────────────
 
-export function CreateUserDialog() {
+export function CreateUserDialog({ orgs = [], outlets = [] }: { orgs?: any[]; outlets?: any[] }) {
   const [open, setOpen] = useState(false)
   const [apiError, setApiError] = useState("")
 
@@ -362,6 +354,7 @@ export function CreateUserDialog() {
             err.message ||
             "Failed to create user."
           setApiError(msg)
+          toast.error(msg)
         },
       }
     )
@@ -390,6 +383,8 @@ export function CreateUserDialog() {
         isPending={isPending}
         apiError={apiError}
         isEdit={false}
+        orgs={orgs}
+        outlets={outlets}
       />
     </>
   )
@@ -397,7 +392,15 @@ export function CreateUserDialog() {
 
 // ── Edit User Dialog ──────────────────────────────────────────────────────────
 
-export function EditUserDialog({ user }: { user: User }) {
+export function EditUserDialog({
+  user,
+  orgs = [],
+  outlets = [],
+}: {
+  user: User
+  orgs?: any[]
+  outlets?: any[]
+}) {
   const [open, setOpen] = useState(false)
   const [apiError, setApiError] = useState("")
 
@@ -441,6 +444,7 @@ export function EditUserDialog({ user }: { user: User }) {
             err.message ||
             "Failed to update user."
           setApiError(msg)
+          toast.error(msg)
         },
       }
     )
@@ -470,6 +474,8 @@ export function EditUserDialog({ user }: { user: User }) {
         isPending={isPending}
         apiError={apiError}
         isEdit={true}
+        orgs={orgs}
+        outlets={outlets}
       />
     </>
   )

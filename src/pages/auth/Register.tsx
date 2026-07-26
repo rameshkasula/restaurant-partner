@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { useCreateRequest } from '@/hooks/useRequests';
 import { Button } from '@/components/ui/button';
@@ -155,6 +156,7 @@ export default function Register() {
         state,
       });
 
+      toast.success('Partner application submitted successfully!');
       setStep('success');
     } catch (err: unknown) {
       let errMsg = 'Something went wrong. Please try again.';
@@ -167,6 +169,7 @@ export default function Register() {
         }
       }
       setApiError(errMsg);
+      toast.error(errMsg);
     }
   };
 

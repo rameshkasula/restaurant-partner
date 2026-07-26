@@ -44,7 +44,8 @@ import {
 import { toast } from "sonner"
 import { APP_NAME } from "@/utils/constants"
 
-import { EditRequestDialog, CreateRequestDialog, ErrorMsg } from "./CreateEditRequests"
+import { EditRequestDialog, CreateRequestDialog } from "./CreateEditRequests"
+import { ErrorMsg } from "@/components/ErrorMsg"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { cn } from "@/lib/utils"
 import { RestaurantRequestStatus } from "@/api/requests.api"

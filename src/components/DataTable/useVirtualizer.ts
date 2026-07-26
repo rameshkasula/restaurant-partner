@@ -32,7 +32,7 @@ export function useVirtualizer({
 
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setContainerHeight(entry.clientHeight || entry.contentRect.height)
+        setContainerHeight((entry.target as HTMLElement).clientHeight || entry.contentRect.height)
       }
     })
 
