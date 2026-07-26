@@ -1,7 +1,15 @@
 import { Link } from "react-router-dom"
-import { IconArrowLeft, IconMail, IconPhone, IconShieldCheck, IconTrash, IconLock, IconUserCheck } from "@tabler/icons-react"
+import {
+  IconArrowLeft,
+  IconMail,
+  IconShieldCheck,
+  IconTrash,
+  IconLock,
+  IconUserCheck,
+  IconPhone,
+} from "@tabler/icons-react"
 import { BrandLogo } from "@/components/BrandLogo"
-import { APP_NAME_LEGAL, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/utils/constants"
+import { APP_NAME_LEGAL, SUPPORT_EMAIL } from "@/utils/constants"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -15,7 +23,8 @@ export default function PrivacyPolicy() {
         aria-hidden
         className="pointer-events-none fixed top-0 left-1/2 h-[400px] w-[600px] -translate-x-1/2 opacity-15"
         style={{
-          background: "radial-gradient(circle, var(--color-primary) 0%, transparent 65%)",
+          background:
+            "radial-gradient(circle, var(--color-primary) 0%, transparent 65%)",
           filter: "blur(100px)",
         }}
       />
@@ -53,24 +62,47 @@ export default function PrivacyPolicy() {
 
         {/* Introduction */}
         <section className="mb-12">
-          <h2 className="mb-4 text-xl font-bold text-foreground">Introduction</h2>
+          <h2 className="mb-4 text-xl font-bold text-foreground">
+            Introduction
+          </h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            {APP_NAME_LEGAL} ("we," "our," or "us") is committed to protecting your privacy
-            and handling your data with utmost care. This privacy policy explains how we
-            collect, use, and protect your personal information.
+            {APP_NAME_LEGAL} ("we," "our," or "us") is committed to protecting
+            your privacy and handling your data with utmost care. This privacy
+            policy explains how we collect, use, and protect your personal
+            information.
           </p>
         </section>
 
         {/* Information We Collect */}
         <section className="mb-12">
-          <h2 className="mb-6 text-xl font-bold text-foreground">Information We Collect</h2>
-          <h3 className="mb-4 text-base font-semibold text-foreground">Personal Information</h3>
+          <h2 className="mb-6 text-xl font-bold text-foreground">
+            Information We Collect
+          </h2>
+          <h3 className="mb-4 text-base font-semibold text-foreground">
+            Personal Information
+          </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { icon: IconUserCheck, title: "Name", desc: "For account identification and personalization" },
-              { icon: IconMail, title: "Email address", desc: "For account verification and communication" },
-              { icon: IconPhone, title: "Mobile number", desc: "For account verification and important updates" },
-              { icon: IconShieldCheck, title: "Company details", desc: "For business profile management" },
+              {
+                icon: IconUserCheck,
+                title: "Name",
+                desc: "For account identification and personalization",
+              },
+              {
+                icon: IconMail,
+                title: "Email address",
+                desc: "For account verification and communication",
+              },
+              {
+                icon: IconPhone,
+                title: "Mobile number",
+                desc: "For account verification and important updates",
+              },
+              {
+                icon: IconShieldCheck,
+                title: "Company details",
+                desc: "For business profile management",
+              },
             ].map(({ icon: Icon, title, desc }) => (
               <Card key={title} className="shadow-sm">
                 <CardContent className="flex items-start gap-3 p-4">
@@ -78,7 +110,9 @@ export default function PrivacyPolicy() {
                     <Icon className="size-4 text-primary" stroke={1.75} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {title}
+                    </p>
                     <p className="text-xs text-muted-foreground">{desc}</p>
                   </div>
                 </CardContent>
@@ -89,10 +123,14 @@ export default function PrivacyPolicy() {
 
         {/* How We Use */}
         <section className="mb-12">
-          <h2 className="mb-6 text-xl font-bold text-foreground">How We Use Your Information</h2>
+          <h2 className="mb-6 text-xl font-bold text-foreground">
+            How We Use Your Information
+          </h2>
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="mb-3 text-base font-semibold text-foreground">Primary Uses</h3>
+              <h3 className="mb-3 text-base font-semibold text-foreground">
+                Primary Uses
+              </h3>
               <ul className="space-y-2">
                 {[
                   "Account management and verification",
@@ -100,7 +138,10 @@ export default function PrivacyPolicy() {
                   "Sending important updates",
                   "Improving our services",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
                     <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                     {item}
                   </li>
@@ -108,7 +149,9 @@ export default function PrivacyPolicy() {
               </ul>
             </div>
             <div>
-              <h3 className="mb-3 text-base font-semibold text-foreground">Data Protection</h3>
+              <h3 className="mb-3 text-base font-semibold text-foreground">
+                Data Protection
+              </h3>
               <ul className="space-y-2">
                 {[
                   "Encrypted data storage",
@@ -116,7 +159,10 @@ export default function PrivacyPolicy() {
                   "Regular security audits",
                   "Limited access controls",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
                     <IconLock className="size-3.5 shrink-0 text-primary" />
                     {item}
                   </li>
@@ -128,16 +174,20 @@ export default function PrivacyPolicy() {
 
         {/* Data Deletion */}
         <section className="mb-12">
-          <h2 className="mb-4 text-xl font-bold text-foreground">Data Deletion</h2>
+          <h2 className="mb-4 text-xl font-bold text-foreground">
+            Data Deletion
+          </h2>
           <Card className="shadow-sm ring-1 ring-destructive/10">
             <CardContent className="p-6">
               <div className="mb-4 flex items-center gap-2">
                 <IconTrash className="size-5 text-destructive" stroke={1.75} />
-                <h3 className="text-base font-semibold text-foreground">Account Deletion Process</h3>
+                <h3 className="text-base font-semibold text-foreground">
+                  Account Deletion Process
+                </h3>
               </div>
               <p className="mb-4 text-sm text-muted-foreground">
-                You have the right to request deletion of your account and associated data.
-                To delete your account:
+                You have the right to request deletion of your account and
+                associated data. To delete your account:
               </p>
               <ol className="mb-6 space-y-2 pl-4">
                 {[
@@ -145,7 +195,10 @@ export default function PrivacyPolicy() {
                   "Enter your Company ID, Mobile Number, and Password",
                   "Submit the deletion request",
                 ].map((step, i) => (
-                  <li key={step} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                  <li
+                    key={step}
+                    className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                  >
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                       {i + 1}
                     </span>
@@ -162,7 +215,10 @@ export default function PrivacyPolicy() {
                   "Remove your company details and associated data",
                   "Send a confirmation email once the process is complete",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <li
+                    key={item}
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                  >
                     <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-destructive/60" />
                     {item}
                   </li>
@@ -174,8 +230,12 @@ export default function PrivacyPolicy() {
 
         {/* Data Security */}
         <section className="mb-12">
-          <h2 className="mb-4 text-xl font-bold text-foreground">Data Security</h2>
-          <h3 className="mb-3 text-base font-semibold text-foreground">Our Security Measures</h3>
+          <h2 className="mb-4 text-xl font-bold text-foreground">
+            Data Security
+          </h2>
+          <h3 className="mb-3 text-base font-semibold text-foreground">
+            Our Security Measures
+          </h3>
           <ul className="space-y-2">
             {[
               "Industry-standard encryption for data storage and transmission",
@@ -183,7 +243,10 @@ export default function PrivacyPolicy() {
               "Strict access controls and authentication",
               "Secure data backup procedures",
             ].map((item) => (
-              <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <li
+                key={item}
+                className="flex items-center gap-2 text-sm text-muted-foreground"
+              >
                 <IconShieldCheck className="size-3.5 shrink-0 text-primary" />
                 {item}
               </li>
@@ -195,8 +258,8 @@ export default function PrivacyPolicy() {
         <section className="mb-12">
           <h2 className="mb-4 text-xl font-bold text-foreground">Contact Us</h2>
           <p className="mb-4 text-sm text-muted-foreground">
-            If you have any questions about our privacy practices or need assistance
-            with data deletion, please contact us at:
+            If you have any questions about our privacy practices or need
+            assistance with data deletion, please contact us at:
           </p>
           <Card className="shadow-sm">
             <CardContent className="flex flex-col gap-3 p-5">
@@ -210,16 +273,6 @@ export default function PrivacyPolicy() {
                   {SUPPORT_EMAIL}
                 </a>
               </div>
-              <div className="flex items-center gap-2.5">
-                <IconPhone className="size-4 text-primary" />
-                <span className="text-sm text-foreground">Phone:</span>
-                <a
-                  href={`tel:${SUPPORT_PHONE}`}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  {SUPPORT_PHONE}
-                </a>
-              </div>
             </CardContent>
           </Card>
         </section>
@@ -228,9 +281,9 @@ export default function PrivacyPolicy() {
         <Card className="border-primary/20 bg-primary/5 shadow-sm">
           <CardContent className="p-5">
             <p className="text-xs leading-relaxed text-primary/80">
-              <strong className="text-primary">Note:</strong> This privacy policy may be
-              updated periodically. We encourage you to review it regularly to stay informed
-              about how we protect your information.
+              <strong className="text-primary">Note:</strong> This privacy
+              policy may be updated periodically. We encourage you to review it
+              regularly to stay informed about how we protect your information.
             </p>
           </CardContent>
         </Card>

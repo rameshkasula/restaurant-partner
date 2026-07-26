@@ -89,7 +89,7 @@ function Navbar() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Logo */}
-          <BrandLogo />
+        <BrandLogo />
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">
@@ -939,8 +939,8 @@ const FOOTER_LINKS = [
     heading: "Company",
     links: [
       { label: "About", href: "#" },
-      { label: "Blog", href: APP_PATHS.BLOGS },
-      { label: "Careers", href: APP_PATHS.CAREERS },
+      // { label: "Blog", href: APP_PATHS.BLOGS },
+      // { label: "Careers", href: APP_PATHS.CAREERS },
     ],
   },
   {
@@ -980,12 +980,12 @@ function Footer() {
               <ul className="flex flex-col gap-2.5">
                 {links.map(({ label, href }) => (
                   <li key={label}>
-                    <a
-                      href={href}
+                    <Link
+                      to={href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

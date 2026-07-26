@@ -332,22 +332,22 @@ export default function TermsOfService() {
                 <IconMail className="size-4 text-primary" />
                 <span className="text-sm text-foreground">Email:</span>
                 <a
-                  href="mailto:support@smartbillbook.com"
+                  href="mailto:support@thesmartbills.com"
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  support@smartbillbook.com
+                  support@thesmartbills.com
                 </a>
               </div>
               <div className="flex items-center gap-2.5">
                 <IconGlobe className="size-4 text-primary" />
                 <span className="text-sm text-foreground">Website:</span>
                 <a
-                  href="https://smartbillbook.com"
+                  href="https://www.thesmartbills.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  https://smartbillbook.com
+                  https://www.thesmartbills.com
                 </a>
               </div>
             </CardContent>

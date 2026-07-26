@@ -29,6 +29,7 @@ import {
 } from "@tabler/icons-react"
 import { BrandLogo } from "@/components/BrandLogo"
 import { APP_NAME } from "@/utils/constants"
+import { APP_PATHS } from "@/router/paths"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -52,8 +53,6 @@ export default function Login() {
     setApiError("")
     try {
       const res = await loginRequest(data)
-
-      console.log("Login Response -", res)
       if (res?.user) {
         localStorage.setItem("user_info", JSON.stringify(res.user))
       }
@@ -65,9 +64,9 @@ export default function Login() {
         role === "SUPER_ADMIN" ||
         role === "PLATFORM_MANAGER"
       ) {
-        navigate("/dashboard")
+        navigate(APP_PATHS.DASHBOARD)
       } else {
-        navigate("/analytics")
+        navigate(APP_PATHS.ANALYTICS)
       }
     } catch (err: unknown) {
       let errMsg = "Something went wrong. Please try again."
@@ -252,7 +251,7 @@ export default function Login() {
               <p className="text-center text-[11px] text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
-                  to="/register"
+                  to={APP_PATHS.REQUEST}
                   className="font-medium text-primary hover:underline"
                 >
                   Request Early Access

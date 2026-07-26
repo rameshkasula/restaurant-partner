@@ -9,11 +9,10 @@ import {
   IconEye,
   IconChartPie,
   IconMail,
-  IconPhone,
   IconCheck,
 } from "@tabler/icons-react"
 import { BrandLogo } from "@/components/BrandLogo"
-import { APP_NAME_LEGAL, SUPPORT_EMAIL, SUPPORT_PHONE } from "@/utils/constants"
+import { APP_NAME_LEGAL, SUPPORT_EMAIL } from "@/utils/constants"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -247,16 +246,6 @@ export default function CookiePolicy() {
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   {SUPPORT_EMAIL}
-                </a>
-              </div>
-              <div className="flex items-center gap-2.5">
-                <IconPhone className="size-4 text-primary" />
-                <span className="text-sm text-foreground">Phone:</span>
-                <a
-                  href={`tel:${SUPPORT_PHONE}`}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  {SUPPORT_PHONE}
                 </a>
               </div>
             </CardContent>
