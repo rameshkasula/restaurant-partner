@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IconAlertCircle } from "@tabler/icons-react"
 import { toast } from "sonner"
-import { useOutlets } from "@/hooks/useOutlets"
+import { useOutlets, useOutlet } from "@/hooks/useOutlets"
 import { useMenuItems } from "@/hooks/useMenuItems"
 import {
   useCreateOrder,
@@ -40,6 +40,9 @@ export default function Billing() {
     if (lockedOutletId) return lockedOutletId
     return selectedOutlet === "ALL" ? null : selectedOutlet
   }, [lockedOutletId, selectedOutlet])
+
+  // Query details for active outlet
+  const { data: activeOutletData = null } = useOutlet(activeOutletId)
 
   // Menu items list for selected outlet
   const { data: menuItems = [], isLoading: menuLoading } = useMenuItems(
@@ -287,6 +290,8 @@ export default function Billing() {
         open={!!viewReceipt}
         onClose={() => setViewReceipt(null)}
         outletName={activeOutletName}
+        outlet={activeOutletData}
+        menuMap={menuMap}
       />
 
       {/* ── Dialog: Edit Order Status ── */}

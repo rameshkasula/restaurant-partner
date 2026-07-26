@@ -86,3 +86,11 @@ export function useRestoreOutlet() {
     },
   })
 }
+
+export function useOutlet(id: string | null, enabled = true) {
+  return useQuery({
+    queryKey: outletKeys.detail(id || ""),
+    queryFn: () => outletApi.get(id || ""),
+    enabled: enabled && !!id,
+  })
+}

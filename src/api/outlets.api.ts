@@ -60,6 +60,7 @@ export interface PaginatedOutlets {
 export interface OutletApi {
   list(): Promise<Outlet[]>
   list(page: number, limit: number): Promise<PaginatedOutlets>
+  get(id: string): Promise<Outlet>
   create(data: CreateOutletDto): Promise<Outlet>
   update(id: string, data: UpdateOutletDto): Promise<Outlet>
   updateStatus(id: string, status: string): Promise<Outlet>
@@ -79,6 +80,8 @@ export const outletApi: OutletApi = {
     }
     return axiosInstance.get<PaginatedOutlets>("/outlet?limit=1000").then((r) => r.data.data)
   },
+  get: (id: string) =>
+    axiosInstance.get<Outlet>(`/outlet/${id}`).then((r) => r.data),
   create: (data: CreateOutletDto) =>
     axiosInstance.post<Outlet>("/outlet", data).then((r) => r.data),
   update: (id: string, data: UpdateOutletDto) =>
