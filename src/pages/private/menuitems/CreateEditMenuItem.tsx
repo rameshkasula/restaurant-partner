@@ -1,21 +1,13 @@
-import { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ErrorMsg } from "@/components/ErrorMsg"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
-import { IconAlertCircle, IconLoader2 } from "@tabler/icons-react"
+import { IconAlertCircle } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { useCreateMenuItem, useUpdateMenuItem } from "@/hooks/useMenuItems"
 import {
@@ -24,7 +16,23 @@ import {
   MenuItemStatus,
   MENU_ITEM_CATEGORY_LABELS,
 } from "@/api/menu-items.api"
+import { FormDialog } from "@/components/FormDialog"
 
+// ─── Zod Schema ─────────────────────────────────────────────────────────────
+const menuItemSchema = z.object({
+  name: z.string().min(1, "Item name is required").max(150),
+  category: z.nativeEnum(MenuItemCategory),
+  price: z.number().min(0, "Price cannot be negative"),
+  stock: z.number().min(0, "Stock cannot be negative"),
+  isAvailable: z.boolean(),
+  status: z.nativeEnum(MenuItemStatus),
+  imageUrl: z.string().url("Invalid image URL").or(z.literal("")).optional().nullable(),
+  outletId: z.string(),
+})
+
+type MenuItemFormData = z.infer<typeof menuItemSchema>
+
+// ─── Inline Error Component ──────────────────────────────────────────────────
 function InlineError({ error }: { error?: string }) {
   if (!error) return null
   return (
@@ -33,17 +41,6 @@ function InlineError({ error }: { error?: string }) {
       <span>{error}</span>
     </p>
   )
-}
-
-
-interface MenuItemFormData {
-  name: string
-  category: MenuItemCategory
-  price: number
-  stock: number
-  isAvailable: boolean
-  status: MenuItemStatus
-  outletId: string
 }
 
 export default function CreateEditMenuItem({
@@ -58,21 +55,11 @@ export default function CreateEditMenuItem({
   lockedOutletId: string | null
 }) {
   const isEdit = !!menuItem
-  const [apiError, setApiError] = useState("")
+  const [apiError, setApiError] = React.useState("")
 
   const createMutation = useCreateMenuItem()
   const updateMutation = useUpdateMenuItem()
   const isPending = createMutation.isPending || updateMutation.isPending
-
-  const defaultValues: MenuItemFormData = {
-    name: menuItem?.name || "",
-    category: menuItem?.category || MenuItemCategory.STARTER,
-    price: menuItem?.price || 0,
-    stock: menuItem?.stock ?? 10,
-    isAvailable: menuItem?.isAvailable ?? true,
-    status: menuItem?.status || MenuItemStatus.ACTIVE,
-    outletId: menuItem?.outletId || lockedOutletId || "",
-  }
 
   const {
     register,
@@ -80,7 +67,19 @@ export default function CreateEditMenuItem({
     control,
     reset,
     formState: { errors },
-  } = useForm<MenuItemFormData>({ defaultValues })
+  } = useForm<MenuItemFormData>({
+    resolver: zodResolver(menuItemSchema),
+    defaultValues: {
+      name: menuItem?.name || "",
+      category: menuItem?.category || MenuItemCategory.STARTER,
+      price: menuItem?.price || 0,
+      stock: menuItem?.stock ?? 10,
+      isAvailable: menuItem?.isAvailable ?? true,
+      status: menuItem?.status || MenuItemStatus.ACTIVE,
+      imageUrl: menuItem?.imageUrl || "",
+      outletId: menuItem?.outletId || lockedOutletId || "",
+    },
+  })
 
   useEffect(() => {
     if (open) {
@@ -91,10 +90,12 @@ export default function CreateEditMenuItem({
         stock: menuItem?.stock ?? 10,
         isAvailable: menuItem?.isAvailable ?? true,
         status: menuItem?.status || MenuItemStatus.ACTIVE,
+        imageUrl: menuItem?.imageUrl || "",
         outletId: menuItem?.outletId || lockedOutletId || "",
       })
+      setApiError("")
     }
-  }, [open, menuItem, lockedOutletId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, menuItem, lockedOutletId, reset])
 
   const onSubmit = async (data: MenuItemFormData) => {
     setApiError("")
@@ -109,6 +110,7 @@ export default function CreateEditMenuItem({
             stock: Number(data.stock),
             isAvailable: data.isAvailable,
             status: data.status,
+            imageUrl: data.imageUrl?.trim() || null,
             outletId: lockedOutletId || data.outletId,
           },
         })
@@ -121,6 +123,7 @@ export default function CreateEditMenuItem({
           stock: Number(data.stock),
           isAvailable: data.isAvailable,
           status: data.status,
+          imageUrl: data.imageUrl?.trim() || null,
           outletId: lockedOutletId || data.outletId,
         })
         toast.success("Menu item created successfully!")
@@ -136,195 +139,137 @@ export default function CreateEditMenuItem({
     }
   }
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      setApiError("")
-    }
-    onOpenChange(newOpen)
-  }
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Edit Menu Item" : "Add Menu Item"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEdit
-              ? "Update the details of this menu item."
-              : "Create a new food or beverage item in the outlet menu."}
-          </DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? "Edit Menu Item" : "Add Menu Item"}
+      description={
+        isEdit
+          ? "Update the details of this menu item."
+          : "Create a new food or beverage item in the outlet menu."
+      }
+      onSubmit={handleSubmit(onSubmit)}
+      isPending={isPending}
+      submitLabel={isEdit ? "Save Changes" : "Add Item"}
+    >
+      {apiError && <p className="text-xs text-destructive">{apiError}</p>}
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4 py-1"
-          noValidate
-        >
-          {apiError && <ErrorMsg message={apiError} />}
+      {/* Name */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="item-name">Item Name *</Label>
+        <Input
+          id="item-name"
+          placeholder="e.g. Butter Chicken"
+          aria-invalid={!!errors.name}
+          {...register("name")}
+        />
+        <InlineError error={errors.name?.message} />
+      </div>
 
-          {/* Name */}
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="item-name" className="font-medium text-foreground">
-              Item Name *
-            </Label>
-            <Input
-              id="item-name"
-              type="text"
-              placeholder="e.g. Butter Chicken"
-              aria-invalid={!!errors.name}
-              {...register("name", { required: "Item name is required." })}
+      {/* Category & Status Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Category */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="item-category">Category *</Label>
+          <NativeSelect
+            id="item-category"
+            aria-invalid={!!errors.category}
+            {...register("category")}
+            className="h-9 w-full text-sm"
+          >
+            {Object.values(MenuItemCategory).map((cat) => (
+              <NativeSelectOption key={cat} value={cat}>
+                {MENU_ITEM_CATEGORY_LABELS[cat]}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <InlineError error={errors.category?.message} />
+        </div>
+
+        {/* Status */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="item-status">Status *</Label>
+          <NativeSelect
+            id="item-status"
+            aria-invalid={!!errors.status}
+            {...register("status")}
+            className="h-9 w-full text-sm"
+          >
+            {Object.values(MenuItemStatus).map((stat) => (
+              <NativeSelectOption key={stat} value={stat}>
+                {stat.charAt(0).toUpperCase() + stat.slice(1)}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <InlineError error={errors.status?.message} />
+        </div>
+      </div>
+
+      {/* Price & Stock Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Price */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="item-price">Price (₹) *</Label>
+          <Input
+            id="item-price"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            aria-invalid={!!errors.price}
+            {...register("price", { valueAsNumber: true })}
+          />
+          <InlineError error={errors.price?.message} />
+        </div>
+
+        {/* Stock */}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="item-stock">Stock Count *</Label>
+          <Input
+            id="item-stock"
+            type="number"
+            placeholder="10"
+            aria-invalid={!!errors.stock}
+            {...register("stock", { valueAsNumber: true })}
+          />
+          <InlineError error={errors.stock?.message} />
+        </div>
+      </div>
+
+      {/* Image URL (Optional) */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="item-imageUrl">Image URL (Optional)</Label>
+        <Input
+          id="item-imageUrl"
+          placeholder="https://example.com/image.jpg"
+          aria-invalid={!!errors.imageUrl}
+          {...register("imageUrl")}
+        />
+        <InlineError error={errors.imageUrl?.message} />
+      </div>
+
+      {/* Is Available Toggle */}
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div className="space-y-0.5">
+          <Label htmlFor="item-available" className="cursor-pointer font-medium">
+            Available for Ordering
+          </Label>
+          <p className="text-[11px] text-muted-foreground">
+            Toggles whether clients can see and order this item right now.
+          </p>
+        </div>
+        <Controller
+          name="isAvailable"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              id="item-available"
+              checked={field.value}
+              onCheckedChange={field.onChange}
             />
-            <InlineError error={errors.name?.message} />
-          </div>
-
-          {/* Category & Status Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Category */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="item-category"
-                className="font-medium text-foreground"
-              >
-                Category *
-              </Label>
-              <NativeSelect
-                id="item-category"
-                aria-invalid={!!errors.category}
-                {...register("category", { required: "Category is required." })}
-                className="h-9 w-full text-sm"
-              >
-                {Object.values(MenuItemCategory).map((cat) => (
-                  <NativeSelectOption key={cat} value={cat}>
-                    {MENU_ITEM_CATEGORY_LABELS[cat]}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-              <InlineError error={errors.category?.message} />
-            </div>
-
-            {/* Status */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="item-status"
-                className="font-medium text-foreground"
-              >
-                Status *
-              </Label>
-              <NativeSelect
-                id="item-status"
-                aria-invalid={!!errors.status}
-                {...register("status", { required: "Status is required." })}
-                className="h-9 w-full text-sm"
-              >
-                {Object.values(MenuItemStatus).map((stat) => (
-                  <NativeSelectOption key={stat} value={stat}>
-                    {stat.charAt(0).toUpperCase() + stat.slice(1)}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-              <InlineError error={errors.status?.message} />
-            </div>
-          </div>
-
-          {/* Price & Stock Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Price */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="item-price"
-                className="font-medium text-foreground"
-              >
-                Price (₹) *
-              </Label>
-              <Input
-                id="item-price"
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                aria-invalid={!!errors.price}
-                {...register("price", {
-                  required: "Price is required.",
-                  valueAsNumber: true,
-                  validate: (val) => val >= 0 || "Price cannot be negative.",
-                })}
-              />
-              <InlineError error={errors.price?.message} />
-            </div>
-
-            {/* Stock */}
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="item-stock"
-                className="font-medium text-foreground"
-              >
-                Stock Count *
-              </Label>
-              <Input
-                id="item-stock"
-                type="number"
-                placeholder="10"
-                aria-invalid={!!errors.stock}
-                {...register("stock", {
-                  required: "Stock is required.",
-                  valueAsNumber: true,
-                  validate: (val) => val >= 0 || "Stock cannot be negative.",
-                })}
-              />
-              <InlineError error={errors.stock?.message} />
-            </div>
-          </div>
-
-          {/* Is Available Toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-0.5">
-              <Label
-                htmlFor="item-available"
-                className="cursor-pointer font-medium text-foreground"
-              >
-                Available for Ordering
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                Toggles whether clients can see and order this item right now.
-              </p>
-            </div>
-            <Controller
-              name="isAvailable"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  id="item-available"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              )}
-            />
-          </div>
-
-          <DialogFooter className="mt-2">
-            <DialogClose
-              render={
-                <Button variant="outline" type="button">
-                  Cancel
-                </Button>
-              }
-            />
-            <Button type="submit" disabled={isPending} className="gap-1.5">
-              {isPending && (
-                <IconLoader2 className="size-3.5 animate-spin" stroke={2} />
-              )}
-              {isPending
-                ? isEdit
-                  ? "Saving…"
-                  : "Adding…"
-                : isEdit
-                  ? "Save Changes"
-                  : "Add Item"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          )}
+        />
+      </div>
+    </FormDialog>
   )
 }

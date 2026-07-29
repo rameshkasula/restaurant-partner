@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { authApi } from '@/api/auth.api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,8 +89,7 @@ function EmailStep({ onNext }: { onNext: (email: string) => void }) {
     setApiError('');
     setLoading(true);
     try {
-      // TODO: replace with real API — POST /auth/forgot-password
-      await new Promise((r) => setTimeout(r, 1200));
+      await authApi.forgotPassword(email.trim());
       toast.success("Verification code sent to your email!");
       onNext(email.trim());
     } catch (err: unknown) {
@@ -168,7 +168,7 @@ function OtpStep({
 }: {
   email: string;
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (resetToken: string) => void;
 }) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -183,11 +183,9 @@ function OtpStep({
     setError('');
     setLoading(true);
     try {
-      // TODO: replace with real API — POST /auth/verify-reset-otp
-      await new Promise((r) => setTimeout(r, 1000));
-      if (otp === '000000') throw new Error('Invalid verification code. Please try again.');
+      const res = await authApi.verifyResetOtp({ email, otp });
       toast.success("Verification code verified successfully!");
-      onSuccess();
+      onSuccess(res.resetToken);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Verification failed. Please try again.';
       setError(msg);
@@ -200,12 +198,18 @@ function OtpStep({
   async function handleResend() {
     setResending(true);
     setError('');
-    // TODO: replace with real API — POST /auth/forgot-password (resend)
-    await new Promise((r) => setTimeout(r, 800));
-    setResending(false);
-    setOtp('');
-    toast.info("Resent verification code to your email.");
-    start();
+    try {
+      await authApi.forgotPassword(email);
+      setResending(false);
+      setOtp('');
+      toast.info("Resent verification code to your email.");
+      start();
+    } catch (err: unknown) {
+      setResending(false);
+      const msg = err instanceof Error ? err.message : 'Failed to resend code.';
+      setError(msg);
+      toast.error(msg);
+    }
   }
 
   function handleOtpChange(val: string) {
@@ -309,9 +313,9 @@ export default function ForgotPassword() {
     setStep('verify-otp');
   }
 
-  function handleOtpSuccess() {
-    // Pass verified email via state so ResetPassword page can use it
-    navigate('/reset-password', { state: { email, verified: true } });
+  function handleOtpSuccess(resetToken: string) {
+    // Pass verified email and resetToken via state so ResetPassword page can use it
+    navigate('/reset-password', { state: { email, resetToken, verified: true } });
   }
 
   const meta = {

@@ -65,7 +65,7 @@ export function CartPane({
         </div>
 
         {/* Selected Items */}
-        <div className="space-y-2.5">
+        <div className="space-y-1.5">
           {Object.keys(cart).length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-muted-foreground">
               <IconShoppingCart className="size-8 opacity-25" />
@@ -81,7 +81,7 @@ export function CartPane({
               return (
                 <div
                   key={itemId}
-                  className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-2.5 text-xs transition-colors hover:bg-muted/40"
+                  className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 p-1.5 px-2.5 text-xs transition-colors hover:bg-muted/40"
                 >
                   <div className="flex flex-col gap-0.5 max-w-[140px] sm:max-w-[160px]">
                     <span className="truncate font-semibold text-foreground">

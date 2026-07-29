@@ -1,15 +1,52 @@
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { cn } from "@/lib/utils"
+import { STATUS_STYLES } from "@/utils/permissions"
 
 interface StatusSelectProps {
   value: string
   onChange: (newStatus: string) => void
   disabled?: boolean
   className?: string
+  statusOptions?: StatusOption[]
 }
 
-export function StatusSelect({ value, onChange, disabled, className }: StatusSelectProps) {
+export type StatusOption = {
+  value: string
+  label: string
+  badgeClass: string
+  dotClass: string
+}
+
+const Options: StatusOption[] = [
+  {
+    value: "active",
+    label: "Active",
+    badgeClass: STATUS_STYLES.ACTIVE,
+    dotClass: "bg-emerald-500",
+  },
+  {
+    value: "inactive",
+    label: "Inactive",
+    badgeClass: STATUS_STYLES.INACTIVE,
+    dotClass: "bg-red-500",
+  },
+  {
+    value: "on hold",
+    label: "On Hold",
+    badgeClass: STATUS_STYLES.ON_HOLD,
+    dotClass: "bg-amber-500",
+  },
+]
+
+export function StatusSelect({
+  value,
+  onChange,
+  disabled,
+  className,
+  statusOptions = Options,
+}: StatusSelectProps) {
   const normalizedValue = value?.toLowerCase() || "active"
+
   return (
     <NativeSelect
       value={normalizedValue}
@@ -17,19 +54,18 @@ export function StatusSelect({ value, onChange, disabled, className }: StatusSel
       size="sm"
       disabled={disabled}
       className={cn(
-        "h-7 w-[100px] rounded-none font-bold tracking-wider uppercase text-[10px]",
-        normalizedValue === "active" &&
-          "border-emerald-500/35 bg-emerald-500/5 text-emerald-600 focus-visible:border-emerald-500 focus-visible:ring-emerald-500/20",
-        normalizedValue === "inactive" &&
-          "border-destructive/35 bg-destructive/5 text-destructive focus-visible:border-destructive focus-visible:ring-destructive/20",
-        normalizedValue === "on hold" &&
-          "border-amber-500/35 bg-amber-500/5 text-amber-600 focus-visible:border-amber-500 focus-visible:ring-amber-500/20",
+        "h-7 w-[100px] rounded-none text-[10px] font-bold tracking-wider uppercase",
+        normalizedValue === "active" && STATUS_STYLES.ACTIVE,
+        normalizedValue === "inactive" && STATUS_STYLES.INACTIVE,
+        normalizedValue === "on hold" && STATUS_STYLES.ON_HOLD,
         className
       )}
     >
-      <NativeSelectOption value="active">Active</NativeSelectOption>
-      <NativeSelectOption value="inactive">Inactive</NativeSelectOption>
-      <NativeSelectOption value="on hold">On Hold</NativeSelectOption>
+      {statusOptions?.map((option) => (
+        <NativeSelectOption key={option.value} value={option.value}>
+          {option.label}
+        </NativeSelectOption>
+      ))}
     </NativeSelect>
   )
 }

@@ -127,6 +127,15 @@ export const NAV_ITEMS = [
     label: "Staff",
     path: APP_PATHS.STAFF,
     icon: IconUsers,
-    allowedRoles: [ROLES.RESTAURANT_OWNER, ROLES.MANAGER],
+    allowedRoles: [ROLES.SUPER_ADMIN, ROLES.PLATFORM_MANAGER],
   },
 ]
+
+export const STATUS_STYLES = {
+  ACTIVE:
+    "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-900/40",
+  INACTIVE:
+    "bg-red-50 text-red-700 border-red-200/60 dark:bg-red-950/20 dark:text-red-300 dark:border-red-900/40",
+  ON_HOLD:
+    "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-300 dark:border-amber-900/40",
+}

@@ -33,7 +33,8 @@ const QK = {
 
 export default function Dashboard() {
   // Queries
-  const { data: requests = [], isLoading: requestsLoading } = useRequests()
+  const { data: dataRequests, isLoading: requestsLoading } = useRequests({ limit: "100" })
+  const requests = dataRequests?.data || []
   const { data: orgs = [], isLoading: orgsLoading } = useQuery({
     queryKey: QK.orgs,
     queryFn: orgApi.list,

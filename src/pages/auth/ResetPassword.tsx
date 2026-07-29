@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { authApi } from '@/api/auth.api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -200,8 +201,10 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Guard: only allow if came from ForgotPassword OTP step
-  const isVerified = (location.state as { verified?: boolean } | null)?.verified === true;
+  const stateData = location.state as { verified?: boolean; email?: string; resetToken?: string } | null;
+  const isVerified = stateData?.verified === true;
+  const email = stateData?.email || '';
+  const resetToken = stateData?.resetToken || '';
 
   const [step, setStep] = useState<Step>('form');
   const [form, setForm] = useState<FormState>({ password: '', confirm: '' });
@@ -242,9 +245,11 @@ export default function ResetPassword() {
     setApiError('');
     setLoading(true);
     try {
-      // TODO: replace with real API — POST /auth/reset-password
-      // Pass email from location.state and the new password
-      await new Promise((r) => setTimeout(r, 1200));
+      await authApi.resetPassword({
+        email,
+        resetToken,
+        newPassword: form.password,
+      });
       toast.success('Password updated successfully! Please sign in with your new password.');
       setStep('success');
     } catch (err: unknown) {

@@ -1,13 +1,6 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Select as CustomSelect,
-  SelectContent as CustomSelectContent,
-  SelectItem as CustomSelectItem,
-  SelectTrigger as CustomSelectTrigger,
-  SelectValue as CustomSelectValue,
-} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import {
   IconPlus,
@@ -35,6 +28,7 @@ import {
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { DataTable, type ColumnDef } from "@/components/DataTable/DataTable"
 import CreateEditMenuItem from "./CreateEditMenuItem"
+import { StatusSelect } from "@/components/StatusSelect"
 
 // ── Helpers & Styling Constants ──────────────────────────────────────────────
 
@@ -63,27 +57,6 @@ const CATEGORY_STYLES = {
     label: "Sides",
     badgeClass:
       "bg-purple-50 text-purple-700 border-purple-200/60 dark:bg-purple-950/20 dark:text-purple-300 dark:border-purple-900/40",
-  },
-}
-
-const STATUS_STYLES = {
-  [MenuItemStatus.ACTIVE]: {
-    label: "Active",
-    badgeClass:
-      "bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-300 dark:border-emerald-900/40",
-    dotClass: "bg-emerald-500",
-  },
-  [MenuItemStatus.INACTIVE]: {
-    label: "Inactive",
-    badgeClass:
-      "bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/20 dark:text-rose-300 dark:border-rose-900/40",
-    dotClass: "bg-rose-500",
-  },
-  [MenuItemStatus.ON_HOLD]: {
-    label: "On Hold",
-    badgeClass:
-      "bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/20 dark:text-amber-300 dark:border-amber-900/40",
-    dotClass: "bg-amber-500",
   },
 }
 
@@ -216,9 +189,17 @@ export default function MenuItems() {
         sortable: true,
         cell: ({ row: item }) => (
           <div className="flex items-center gap-2.5">
-            <div className="flex size-7 items-center justify-center rounded-md border bg-muted text-muted-foreground">
-              <IconChefHat className="size-4 text-primary/80" />
-            </div>
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.name}
+                className="size-8 rounded-md object-cover border shrink-0"
+              />
+            ) : (
+              <div className="flex size-8 items-center justify-center rounded-md border bg-muted text-muted-foreground shrink-0">
+                <IconChefHat className="size-4 text-primary/80" />
+              </div>
+            )}
             <span className="text-sm font-semibold text-foreground">
               {item.name}
             </span>
@@ -291,8 +272,6 @@ export default function MenuItems() {
         sortable: true,
         cell: ({ row: item }) => {
           const deleted = item.isDeleted
-          const statusInfo =
-            STATUS_STYLES[item.status] || STATUS_STYLES[MenuItemStatus.ACTIVE]
 
           if (deleted) {
             return (
@@ -303,38 +282,10 @@ export default function MenuItems() {
           }
 
           return (
-            <CustomSelect
+            <StatusSelect
               value={item.status}
-              onValueChange={(val) =>
-                handleStatusChange(item, val as MenuItemStatus)
-              }
-            >
-              <CustomSelectTrigger
-                className={cn(
-                  "flex h-6 w-fit min-w-[95px] cursor-pointer items-center justify-between rounded-md border-0 px-2 text-xs font-medium shadow-none hover:bg-muted/50",
-                  statusInfo.badgeClass
-                )}
-              >
-                <CustomSelectValue />
-              </CustomSelectTrigger>
-              <CustomSelectContent className="min-w-[120px] rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md">
-                {Object.entries(STATUS_STYLES).map(([value, info]) => (
-                  <CustomSelectItem
-                    key={value}
-                    value={value}
-                    className="flex cursor-pointer items-center rounded-sm px-2.5 py-1 text-xs hover:bg-accent hover:text-accent-foreground"
-                  >
-                    <span
-                      className={cn(
-                        "mr-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full",
-                        info.dotClass
-                      )}
-                    />
-                    {info.label}
-                  </CustomSelectItem>
-                ))}
-              </CustomSelectContent>
-            </CustomSelect>
+              onChange={(val) => handleStatusChange(item, val as MenuItemStatus)}
+            />
           )
         },
       },
@@ -346,7 +297,7 @@ export default function MenuItems() {
           const deleted = item.isDeleted
 
           return (
-            <div className="flex items-center justify-end gap-1.5">
+            <div className="flex items-center justify-end gap-1.5 font-sans">
               {deleted ? (
                 <Button
                   variant="ghost"
@@ -402,8 +353,8 @@ export default function MenuItems() {
       </div>
 
       {/* ── Filters Card ── */}
-      <Card className="shadow-sm">
-        <CardContent>
+      <Card className="shadow-sm border-border/40">
+        <CardContent className="p-4">
           {/* Category Tabs */}
           <div className="flex flex-wrap gap-1.5">
             <Button

@@ -66,4 +66,13 @@ export const authApi = {
 
   verifyOtp: (data: VerifyOtpDto) =>
     axiosInstance.post<MessageResponse>("/auth/verify-otp", data).then((r) => r.data),
+
+  forgotPassword: (email: string) =>
+    axiosInstance.post<MessageResponse>("/auth/forgot-password", { email }).then((r) => r.data),
+
+  verifyResetOtp: (data: { email: string; otp: string }) =>
+    axiosInstance.post<{ message: string; resetToken: string }>("/auth/verify-reset-otp", data).then((r) => r.data),
+
+  resetPassword: (data: { email: string; resetToken: string; newPassword: string }) =>
+    axiosInstance.post<MessageResponse>("/auth/reset-password", data).then((r) => r.data),
 }

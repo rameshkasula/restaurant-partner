@@ -36,6 +36,7 @@ export interface MenuItem {
   isAvailable: boolean
   stock: number
   status: MenuItemStatus
+  imageUrl?: string | null
   isDeleted: boolean
   createdAt: string
   updatedAt: string
@@ -49,6 +50,7 @@ export interface CreateMenuItemDto {
   isAvailable?: boolean
   stock?: number
   status?: MenuItemStatus
+  imageUrl?: string | null
 }
 
 export interface UpdateMenuItemDto {
@@ -59,6 +61,7 @@ export interface UpdateMenuItemDto {
   isAvailable?: boolean
   stock?: number
   status?: MenuItemStatus
+  imageUrl?: string | null
 }
 
 export const menuItemApi = {

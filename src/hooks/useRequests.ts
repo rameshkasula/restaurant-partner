@@ -1,4 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query"
 import {
   requestsApi,
   type CreateRestaurantRequestDto,
@@ -13,10 +18,17 @@ export const requestKeys = {
   detail: (id: string) => [...requestKeys.details(), id] as const,
 }
 
-export function useRequests() {
+export function useRequests(params?: {
+  page?: string
+  limit?: string
+  status?: string
+  search?: string
+}) {
   return useQuery({
     queryKey: requestKeys.lists(),
-    queryFn: requestsApi.list,
+    queryFn: () => requestsApi.list(params),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 

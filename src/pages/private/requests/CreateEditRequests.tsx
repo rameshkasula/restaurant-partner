@@ -1,24 +1,43 @@
-import { useState } from "react"
+import React, { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { useUpdateRequest, useCreateRequest } from "@/hooks/useRequests"
 import { type RestaurantRequest } from "@/api/requests.api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ErrorMsg } from "@/components/ErrorMsg"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog"
-import { IconEdit, IconPlus } from "@tabler/icons-react"
+import { IconEdit, IconPlus, IconAlertCircle } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { APP_NAME } from "@/utils/constants"
+import { FormDialog } from "@/components/FormDialog"
 
+// ─── Zod Schema ─────────────────────────────────────────────────────────────
+const requestSchema = z.object({
+  restaurantName: z.string().min(1, "Restaurant name is required").max(150),
+  name: z.string().min(1, "Contact person name is required").max(100),
+  email: z.string().email("Invalid email address"),
+  phone: z
+    .string()
+    .min(7, "Phone number must be at least 7 characters")
+    .max(15, "Phone number cannot exceed 15 characters"),
+  city: z.string().max(100).optional().or(z.literal("")),
+  state: z.string().max(100).optional().or(z.literal("")),
+  message: z.string().max(1000).optional().or(z.literal("")),
+})
+
+type RequestFormData = z.infer<typeof requestSchema>
+
+// ─── Inline Error Helper ─────────────────────────────────────────────────────
+function InlineError({ error }: { error?: string }) {
+  if (!error) return null
+  return (
+    <p className="mt-1 flex items-center gap-1 text-[11px] text-destructive">
+      <IconAlertCircle className="size-3 shrink-0" stroke={2} />
+      <span>{error}</span>
+    </p>
+  )
+}
 
 // ─── Edit Dialog Component ───────────────────────────────────────────────────
 interface EditRequestDialogProps {
@@ -27,347 +46,297 @@ interface EditRequestDialogProps {
 
 export function EditRequestDialog({ request }: EditRequestDialogProps) {
   const { mutateAsync: updateRequest, isPending } = useUpdateRequest()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState(request.name)
-  const [email, setEmail] = useState(request.email)
-  const [phone, setPhone] = useState(request.phone)
-  const [restaurantName, setRestaurantName] = useState(request.restaurantName)
-  const [city, setCity] = useState(request.city || "")
-  const [state, setState] = useState(request.state || "")
-  const [message, setMessage] = useState(request.message || "")
-  const [error, setError] = useState("")
+  const [open, setOpen] = React.useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    if (
-      !name.trim() ||
-      !email.trim() ||
-      !phone.trim() ||
-      !restaurantName.trim()
-    ) {
-      setError("Please fill in all required fields.")
-      return
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RequestFormData>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: {
+      restaurantName: request.restaurantName,
+      name: request.name,
+      email: request.email,
+      phone: request.phone,
+      city: request.city || "",
+      state: request.state || "",
+      message: request.message || "",
+    },
+  })
+
+  useEffect(() => {
+    if (open) {
+      reset({
+        restaurantName: request.restaurantName,
+        name: request.name,
+        email: request.email,
+        phone: request.phone,
+        city: request.city || "",
+        state: request.state || "",
+        message: request.message || "",
+      })
     }
+  }, [open, request, reset])
+
+  const onSubmit = async (data: RequestFormData) => {
     try {
       await updateRequest({
         id: request._id,
         data: {
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          restaurantName: restaurantName.trim(),
-          city: city.trim() || undefined,
-          state: state.trim() || undefined,
-          message: message.trim() || undefined,
+          name: data.name.trim(),
+          email: data.email.trim(),
+          phone: data.phone.trim(),
+          restaurantName: data.restaurantName.trim(),
+          city: data.city?.trim() || undefined,
+          state: data.state?.trim() || undefined,
+          message: data.message?.trim() || undefined,
         },
       })
       toast.success("Request updated successfully!")
       setOpen(false)
     } catch (err: unknown) {
-      const msg = "Failed to update request. Please make sure inputs are valid."
-      setError(msg)
-      toast.error(msg)
+      toast.error("Failed to update request. Please make sure inputs are valid.")
     }
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) {
-          setName(request.name)
-          setEmail(request.email)
-          setPhone(request.phone)
-          setRestaurantName(request.restaurantName)
-          setCity(request.city || "")
-          setState(request.state || "")
-          setMessage(request.message || "")
-          setError("")
-        }
-      }}
+      onOpenChange={setOpen}
+      title="Edit Request Details"
+      description={`Modify details for ${request.restaurantName}'s early access request.`}
+      trigger={
+        <Button variant="ghost" size="icon-sm" aria-label="Edit Request">
+          <IconEdit className="size-4" stroke={1.75} />
+        </Button>
+      }
+      onSubmit={handleSubmit(onSubmit)}
+      isPending={isPending}
+      submitLabel="Save Changes"
     >
-      <DialogTrigger
-        render={
-          <Button variant="ghost" size="icon-sm" aria-label="Edit Request">
-            <IconEdit className="size-4" stroke={1.75} />
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Edit Request Details</DialogTitle>
-          <DialogDescription>
-            Modify details for {request.restaurantName}'s early access request.
-          </DialogDescription>
-        </DialogHeader>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-restaurantName">Restaurant Name *</Label>
+          <Input
+            id="edit-restaurantName"
+            aria-invalid={!!errors.restaurantName}
+            {...register("restaurantName")}
+          />
+          <InlineError error={errors.restaurantName?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-name">Contact Person *</Label>
+          <Input
+            id="edit-name"
+            aria-invalid={!!errors.name}
+            {...register("name")}
+          />
+          <InlineError error={errors.name?.message} />
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
-          {error && <ErrorMsg message={error} />}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-email">Email Address *</Label>
+          <Input
+            id="edit-email"
+            type="email"
+            aria-invalid={!!errors.email}
+            {...register("email")}
+          />
+          <InlineError error={errors.email?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-phone">Phone Number *</Label>
+          <Input
+            id="edit-phone"
+            aria-invalid={!!errors.phone}
+            {...register("phone")}
+          />
+          <InlineError error={errors.phone?.message} />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-restaurantName">Restaurant Name *</Label>
-              <Input
-                id="edit-restaurantName"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-name">Contact Person *</Label>
-              <Input
-                id="edit-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-city">City</Label>
+          <Input
+            id="edit-city"
+            aria-invalid={!!errors.city}
+            {...register("city")}
+          />
+          <InlineError error={errors.city?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="edit-state">State</Label>
+          <Input
+            id="edit-state"
+            aria-invalid={!!errors.state}
+            {...register("state")}
+          />
+          <InlineError error={errors.state?.message} />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-email">Email Address *</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-phone">Phone Number *</Label>
-              <Input
-                id="edit-phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-city">City</Label>
-              <Input
-                id="edit-city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-state">State</Label>
-              <Input
-                id="edit-state"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-message">Message / Notes</Label>
-            <Input
-              id="edit-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Optional message from partner"
-            />
-          </div>
-
-          <DialogFooter className="mt-4">
-            <DialogClose
-              render={
-                <Button variant="outline" type="button">
-                  Cancel
-                </Button>
-              }
-            />
-            <Button type="submit" disabled={isPending}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="edit-message">Message / Notes</Label>
+        <Input
+          id="edit-message"
+          placeholder="Optional message from partner"
+          aria-invalid={!!errors.message}
+          {...register("message")}
+        />
+        <InlineError error={errors.message?.message} />
+      </div>
+    </FormDialog>
   )
 }
 
 // ─── Create Dialog Component ─────────────────────────────────────────────────
 export function CreateRequestDialog() {
   const { mutateAsync: createRequest, isPending } = useCreateRequest()
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [restaurantName, setRestaurantName] = useState("")
-  const [city, setCity] = useState("")
-  const [state, setState] = useState("")
-  const [message, setMessage] = useState("")
-  const [error, setError] = useState("")
+  const [open, setOpen] = React.useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    if (
-      !name.trim() ||
-      !email.trim() ||
-      !phone.trim() ||
-      !restaurantName.trim()
-    ) {
-      setError("Please fill in all required fields.")
-      return
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<RequestFormData>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: {
+      restaurantName: "",
+      name: "",
+      email: "",
+      phone: "",
+      city: "",
+      state: "",
+      message: "",
+    },
+  })
+
+  useEffect(() => {
+    if (!open) {
+      reset()
     }
+  }, [open, reset])
+
+  const onSubmit = async (data: RequestFormData) => {
     try {
       await createRequest({
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
-        restaurantName: restaurantName.trim(),
-        city: city.trim() || undefined,
-        state: state.trim() || undefined,
-        message: message.trim() || undefined,
+        name: data.name.trim(),
+        email: data.email.trim(),
+        phone: data.phone.trim(),
+        restaurantName: data.restaurantName.trim(),
+        city: data.city?.trim() || undefined,
+        state: data.state?.trim() || undefined,
+        message: data.message?.trim() || undefined,
       })
       toast.success("Request created successfully!")
       setOpen(false)
-      // Reset form
-      setName("")
-      setEmail("")
-      setPhone("")
-      setRestaurantName("")
-      setCity("")
-      setState("")
-      setMessage("")
     } catch (err: unknown) {
-      const msg = "Failed to create request. Please make sure inputs are valid."
-      setError(msg)
-      toast.error(msg)
+      toast.error("Failed to create request. Please make sure inputs are valid.")
     }
   }
 
   return (
-    <Dialog
+    <FormDialog
       open={open}
-      onOpenChange={(o) => {
-        setOpen(o)
-        if (!o) {
-          setName("")
-          setEmail("")
-          setPhone("")
-          setRestaurantName("")
-          setCity("")
-          setState("")
-          setMessage("")
-          setError("")
-        }
-      }}
+      onOpenChange={setOpen}
+      title="Create New Request"
+      description={`Submit details to request early access for ${APP_NAME}.`}
+      trigger={
+        <Button size="sm" className="flex items-center gap-1.5">
+          <IconPlus className="size-4" stroke={2} />
+          <span>Create Request</span>
+        </Button>
+      }
+      onSubmit={handleSubmit(onSubmit)}
+      isPending={isPending}
+      submitLabel="Submit Request"
     >
-      <DialogTrigger
-        render={
-          <Button size="sm" className="flex items-center gap-1.5">
-            <IconPlus className="size-4" stroke={2} />
-            <span>Create Request</span>
-          </Button>
-        }
-      />
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Create New Request</DialogTitle>
-          <DialogDescription>
-            Submit details to request early access for {APP_NAME}.
-          </DialogDescription>
-        </DialogHeader>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-restaurantName">Restaurant Name *</Label>
+          <Input
+            id="create-restaurantName"
+            placeholder="e.g. Pizza Palace"
+            aria-invalid={!!errors.restaurantName}
+            {...register("restaurantName")}
+          />
+          <InlineError error={errors.restaurantName?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-name">Contact Person *</Label>
+          <Input
+            id="create-name"
+            placeholder="e.g. John Doe"
+            aria-invalid={!!errors.name}
+            {...register("name")}
+          />
+          <InlineError error={errors.name?.message} />
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 py-2">
-          {error && <ErrorMsg message={error} />}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-email">Email Address *</Label>
+          <Input
+            id="create-email"
+            type="email"
+            placeholder="e.g. john@example.com"
+            aria-invalid={!!errors.email}
+            {...register("email")}
+          />
+          <InlineError error={errors.email?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-phone">Phone Number *</Label>
+          <Input
+            id="create-phone"
+            placeholder="e.g. +91 98765 43210"
+            aria-invalid={!!errors.phone}
+            {...register("phone")}
+          />
+          <InlineError error={errors.phone?.message} />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-restaurantName">Restaurant Name *</Label>
-              <Input
-                id="create-restaurantName"
-                placeholder="e.g. Pizza Palace"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-name">Contact Person *</Label>
-              <Input
-                id="create-name"
-                placeholder="e.g. John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-          </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-city">City</Label>
+          <Input
+            id="create-city"
+            placeholder="e.g. Mumbai"
+            aria-invalid={!!errors.city}
+            {...register("city")}
+          />
+          <InlineError error={errors.city?.message} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="create-state">State</Label>
+          <Input
+            id="create-state"
+            placeholder="e.g. Maharashtra"
+            aria-invalid={!!errors.state}
+            {...register("state")}
+          />
+          <InlineError error={errors.state?.message} />
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-email">Email Address *</Label>
-              <Input
-                id="create-email"
-                type="email"
-                placeholder="e.g. john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-phone">Phone Number *</Label>
-              <Input
-                id="create-phone"
-                placeholder="e.g. +91 98765 43210"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-city">City</Label>
-              <Input
-                id="create-city"
-                placeholder="e.g. Mumbai"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="create-state">State</Label>
-              <Input
-                id="create-state"
-                placeholder="e.g. Maharashtra"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="create-message">Message / Notes</Label>
-            <Input
-              id="create-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Optional message or special request"
-            />
-          </div>
-
-          <DialogFooter className="mt-4">
-            <DialogClose
-              render={
-                <Button variant="outline" type="button">
-                  Cancel
-                </Button>
-              }
-            />
-            <Button type="submit" disabled={isPending}>
-              Submit Request
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="create-message">Message / Notes</Label>
+        <Input
+          id="create-message"
+          placeholder="Optional message or special request"
+          aria-invalid={!!errors.message}
+          {...register("message")}
+        />
+        <InlineError error={errors.message?.message} />
+      </div>
+    </FormDialog>
   )
 }
