@@ -148,7 +148,9 @@ export default function Billing() {
       }
     })
     const isTaxRequired = activeOutletData?.isTaxRequired !== false
-    const taxPercentage = isTaxRequired ? (activeOutletData?.taxPercentage ?? 5) : 0
+    const taxPercentage = isTaxRequired
+      ? (activeOutletData?.taxPercentage ?? 5)
+      : 0
     const tax = Number((subtotal * (taxPercentage / 100)).toFixed(2))
     const total = Number((subtotal + tax).toFixed(2))
 
@@ -338,7 +340,8 @@ export default function Billing() {
           <DialogHeader>
             <DialogTitle>Customer Dining QR</DialogTitle>
             <DialogDescription>
-              Generate a unique QR code for customers to view the menu and place orders from their table.
+              Generate a unique QR code for customers to view the menu and place
+              orders from their table.
             </DialogDescription>
           </DialogHeader>
 
@@ -358,14 +361,18 @@ export default function Billing() {
             </div>
 
             <QRCodeGenerator
-              value={`http://localhost:5174/menuitems/${qrTableId || "Table-1"}?outletId=${activeOutletId}`}
+              value={`https://customer.thesmartbills.com/menuitems/${qrTableId || "Table-1"}?outletId=${activeOutletId}`}
               size={220}
               className="mt-2"
             />
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowQrModal(false)} className="w-full text-xs">
+            <Button
+              variant="outline"
+              onClick={() => setShowQrModal(false)}
+              className="w-full text-xs"
+            >
               Close
             </Button>
           </DialogFooter>
