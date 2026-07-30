@@ -5,7 +5,6 @@
 import * as React from "react"
 import {
   type ColumnDef as TanStackColumnDef,
-  type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
   type PaginationState,

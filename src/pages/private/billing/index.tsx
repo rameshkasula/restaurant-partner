@@ -133,14 +133,16 @@ export default function Billing() {
         subtotal += item.price * qty
       }
     })
-    const tax = Number((subtotal * 0.05).toFixed(2))
+    const isTaxRequired = activeOutletData?.isTaxRequired !== false
+    const taxPercentage = isTaxRequired ? (activeOutletData?.taxPercentage ?? 5) : 0
+    const tax = Number((subtotal * (taxPercentage / 100)).toFixed(2))
     const total = Number((subtotal + tax).toFixed(2))
 
-    return { subtotal, tax, total }
-  }, [cart, menuMap])
+    return { subtotal, tax, total, taxPercentage }
+  }, [cart, menuMap, activeOutletData])
 
   // Submit order
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (tableNo?: number, note?: string) => {
     if (!activeOutletId) {
       toast.error("Please select a restaurant outlet first.")
       return
@@ -176,6 +178,8 @@ export default function Billing() {
         items: orderItems,
         status: orderStatus,
         bill: billPayload,
+        tableNo,
+        note,
       })
       toast.success("Order processed successfully!")
       setViewReceipt(order)

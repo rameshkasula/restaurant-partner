@@ -1,20 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { IconShoppingCart, IconMinus, IconPlus, IconLoader2, IconTrash } from "@tabler/icons-react"
 import { OrderStatus, PaymentMode } from "@/api/orders.api"
 import { type MenuItem } from "@/api/menu-items.api"
+import * as React from "react"
 
 interface CartPaneProps {
   cart: Record<string, number>
   menuMap: Record<string, MenuItem>
-  billCalculations: { subtotal: number; tax: number; total: number }
+  billCalculations: { subtotal: number; tax: number; total: number; taxPercentage: number }
   paymentMode: PaymentMode
   setPaymentMode: (pm: PaymentMode) => void
   orderStatus: OrderStatus
   setOrderStatus: (os: OrderStatus) => void
-  handlePlaceOrder: () => void
+  handlePlaceOrder: (tableNo?: number, note?: string) => void
   clearCart: () => void
   removeFromCart: (id: string) => void
   addToCart: (id: string) => void
@@ -36,6 +38,16 @@ export function CartPane({
   isPending,
 }: CartPaneProps) {
   const itemCount = Object.values(cart).reduce((acc, qty) => acc + qty, 0)
+
+  const [tableNo, setTableNo] = React.useState<string>("")
+  const [note, setNote] = React.useState<string>("")
+
+  React.useEffect(() => {
+    if (Object.keys(cart).length === 0) {
+      setTableNo("")
+      setNote("")
+    }
+  }, [cart])
 
   return (
     <Card className="border-primary/30 shadow-xs dark:border-primary/40 bg-card">
@@ -132,7 +144,7 @@ export function CartPane({
             </span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">GST Tax (5%):</span>
+            <span className="text-muted-foreground">GST Tax ({billCalculations.taxPercentage}%):</span>
             <span className="font-medium text-foreground">
               ₹{billCalculations.tax.toFixed(2)}
             </span>
@@ -146,6 +158,39 @@ export function CartPane({
         {/* Checkout Configuration & Action */}
         {Object.keys(cart).length > 0 && (
           <div className="space-y-3 border-t border-border pt-3.5">
+            <div className="grid grid-cols-3 gap-3">
+              {/* Table Number */}
+              <div className="flex flex-col gap-1.5 col-span-1">
+                <Label htmlFor="cart-table" className="text-xs font-semibold">
+                  Table No.
+                </Label>
+                <Input
+                  id="cart-table"
+                  type="number"
+                  placeholder="e.g. 5"
+                  value={tableNo}
+                  onChange={(e) => setTableNo(e.target.value)}
+                  className="h-8 text-xs bg-background"
+                  min={1}
+                />
+              </div>
+
+              {/* Notes */}
+              <div className="flex flex-col gap-1.5 col-span-2">
+                <Label htmlFor="cart-note" className="text-xs font-semibold">
+                  Notes
+                </Label>
+                <Input
+                  id="cart-note"
+                  type="text"
+                  placeholder="Optional instructions..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="h-8 text-xs bg-background"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               {/* Payment Mode */}
               <div className="flex flex-col gap-1.5">
@@ -191,7 +236,12 @@ export function CartPane({
             </div>
 
             <Button
-              onClick={handlePlaceOrder}
+              onClick={() =>
+                handlePlaceOrder(
+                  tableNo ? parseInt(tableNo, 10) : undefined,
+                  note || undefined
+                )
+              }
               className="mt-1 w-full gap-2 text-xs font-bold py-2.5 h-10 shadow-xs cursor-pointer"
               disabled={isPending}
             >

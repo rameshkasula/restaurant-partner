@@ -40,6 +40,8 @@ export interface Order {
   items: OrderItem[]
   status: OrderStatus
   bill: Bill
+  tableNo?: number
+  note?: string
   isDeleted: boolean
   createdAt: string
   updatedAt: string
@@ -50,6 +52,8 @@ export interface CreateOrderDto {
   items: OrderItem[]
   status?: OrderStatus
   bill: Bill
+  tableNo?: number
+  note?: string
 }
 
 export interface UpdateOrderDto {
@@ -57,6 +61,8 @@ export interface UpdateOrderDto {
   items?: OrderItem[]
   status?: OrderStatus
   bill?: Partial<Bill>
+  tableNo?: number
+  note?: string
 }
 
 export const orderApi = {

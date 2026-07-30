@@ -45,6 +45,14 @@ export function ReceiptModal({
   const finalGST = outlet?.gstin || ""
   const finalPAN = outlet?.pan || ""
 
+  const taxPercentage = outlet
+    ? outlet.isTaxRequired !== false
+      ? (outlet.taxPercentage ?? 5)
+      : 0
+    : order.bill.subtotal > 0
+    ? Math.round((order.bill.tax / order.bill.subtotal) * 100)
+    : 5
+
   const getMenuItemName = (menuItemId: string) => {
     return menuMap[menuItemId]?.name || menuItemId.slice(-4).toUpperCase()
   }
@@ -161,7 +169,7 @@ export function ReceiptModal({
               <span>₹{order.bill.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Tax (5%):</span>
+              <span>Tax ({taxPercentage}%):</span>
               <span>₹{order.bill.tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-t pt-1.5 text-xs font-bold">
@@ -179,6 +187,26 @@ export function ReceiptModal({
               {order.bill.paymentMode ?? "UNPAID"}
             </span>
           </div>
+
+          {(order.tableNo !== undefined || order.note) && (
+            <>
+              <div className="my-1 border-t border-dashed" />
+              <div className="space-y-1 text-[11px] text-muted-foreground">
+                {order.tableNo !== undefined && (
+                  <div className="flex justify-between">
+                    <span>Table No:</span>
+                    <span className="font-bold text-foreground">{order.tableNo}</span>
+                  </div>
+                )}
+                {order.note && (
+                  <div className="flex flex-col gap-0.5">
+                    <span>Notes:</span>
+                    <span className="text-[10px] break-words text-foreground whitespace-pre-wrap">{order.note}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="my-1 border-t border-dashed" />
 
@@ -276,7 +304,7 @@ export function ReceiptModal({
               <span>₹{order.bill.subtotal.toFixed(2)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Tax (5%):</span>
+              <span>Tax ({taxPercentage}%):</span>
               <span>₹{order.bill.tax.toFixed(2)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #000", marginTop: "4px", paddingTop: "4px", fontSize: "12px", fontWeight: "bold" }}>
@@ -293,6 +321,26 @@ export function ReceiptModal({
               {order.bill.paymentMode ?? "UNPAID"}
             </span>
           </div>
+
+          {(order.tableNo !== undefined || order.note) && (
+            <>
+              <div style={{ borderTop: "1px dashed #000", margin: "6px 0" }} />
+              <div style={{ fontSize: "11px", color: "#666" }}>
+                {order.tableNo !== undefined && (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Table No:</span>
+                    <span style={{ fontWeight: "bold", color: "#000" }}>{order.tableNo}</span>
+                  </div>
+                )}
+                {order.note && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "4px" }}>
+                    <span>Notes:</span>
+                    <span style={{ fontSize: "10px", color: "#000", whiteSpace: "pre-wrap" }}>{order.note}</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <div style={{ borderTop: "1px dashed #000", margin: "8px 0 6px 0" }} />
 
