@@ -131,12 +131,18 @@ export default function Requests() {
   // Calculations for Stats Card using statsRequests
   const totalRequests = statsRequests.length
   const uniqueCities = useMemo(() => {
-    return Array.from(new Set(statsRequests.map((r) => r.city).filter(Boolean)))
-      .length
+    return Array.from(
+      new Set(
+        statsRequests
+          .map((r: RestaurantRequest) => r?.city)
+          .filter(Boolean)
+      )
+    ).length
   }, [statsRequests])
 
   const recentRequestsCount = useMemo(() => {
-    return statsRequests.filter((r) => {
+    return statsRequests.filter((r: RestaurantRequest) => {
+      if (!r?.createdAt) return false
       const createdDate = new Date(r.createdAt)
       const diffTime = Math.abs(new Date().getTime() - createdDate.getTime())
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))

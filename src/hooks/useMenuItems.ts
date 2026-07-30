@@ -9,10 +9,28 @@ export const menuItemKeys = {
   detail: (id: string) => [...menuItemKeys.details(), id] as const,
 }
 
+import { saveMenuItems, getMenuItems } from "@/utils/indexedDB"
+
 export function useMenuItems(outletId?: string, includeDeleted = false, enabled = true) {
   return useQuery({
     queryKey: menuItemKeys.list(outletId, includeDeleted),
-    queryFn: () => menuItemApi.list(outletId, includeDeleted),
+    queryFn: async () => {
+      try {
+        const items = await menuItemApi.list(outletId, includeDeleted)
+        saveMenuItems(items).catch(console.error)
+        return items
+      } catch (error) {
+        console.warn("Menu items API failed. Falling back to IndexedDB.", error)
+        const cached = await getMenuItems()
+        if (cached && cached.length > 0) {
+          if (outletId) {
+            return cached.filter((item) => item.outletId === outletId)
+          }
+          return cached
+        }
+        throw error
+      }
+    },
     enabled,
   })
 }

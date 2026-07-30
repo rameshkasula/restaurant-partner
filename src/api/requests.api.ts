@@ -48,6 +48,13 @@ export interface UpdateRestaurantRequestDto {
   status?: RestaurantRequestStatus
 }
 
+export interface PaginatedRequestsResponse {
+  data: RestaurantRequest[]
+  pagination?: {
+    total: number
+  }
+}
+
 export const requestsApi = {
   create: (data: CreateRestaurantRequestDto) =>
     axiosInstance
@@ -60,7 +67,7 @@ export const requestsApi = {
       | undefined
   ) =>
     axiosInstance
-      .get<RestaurantRequest[]>("/restaurant-requests", { params })
+      .get<PaginatedRequestsResponse>("/restaurant-requests", { params })
       .then((r) => r.data),
 
   get: (id: string) =>
