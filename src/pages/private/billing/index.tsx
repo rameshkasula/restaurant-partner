@@ -27,6 +27,18 @@ import { EditOrderDialog } from "./components/EditOrderDialog"
 import { BillingHeader } from "./components/BillingHeader"
 import { MenuCatalog } from "./components/MenuCatalog"
 import { CartPane } from "./components/CartPane"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { QRCodeGenerator } from "@/components/QRCodeGenerator"
 
 export default function Billing() {
   const profile = useCurrentUserProfile()
@@ -73,6 +85,8 @@ export default function Billing() {
   const [viewReceipt, setViewReceipt] = useState<Order | null>(null)
   const [editOrder, setEditingOrder] = useState<Order | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [showQrModal, setShowQrModal] = useState(false)
+  const [qrTableId, setQrTableId] = useState("Table-1")
 
   // Automatically select first outlet if not admin
   useEffect(() => {
@@ -245,6 +259,8 @@ export default function Billing() {
         selectedOutlet={selectedOutlet}
         setSelectedOutlet={setSelectedOutlet}
         lockedOutletId={lockedOutletId}
+        onShowQr={() => setShowQrModal(true)}
+        hasActiveOutlet={!!activeOutletId}
       />
 
       {!activeOutletId ? (
@@ -315,6 +331,46 @@ export default function Billing() {
         title="Delete Order Invoice"
         description="Are you sure you want to delete this order? It will be soft-deleted and can be restored later."
       />
+
+      {/* ── Dialog: Generate Customer QR ── */}
+      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Customer Dining QR</DialogTitle>
+            <DialogDescription>
+              Generate a unique QR code for customers to view the menu and place orders from their table.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="qr-table-id" className="text-xs font-semibold">
+                Table ID / Number
+              </Label>
+              <Input
+                id="qr-table-id"
+                type="text"
+                placeholder="e.g. Table-5"
+                value={qrTableId}
+                onChange={(e) => setQrTableId(e.target.value)}
+                className="h-9 text-xs"
+              />
+            </div>
+
+            <QRCodeGenerator
+              value={`http://localhost:5174/menuitems/${qrTableId || "Table-1"}?outletId=${activeOutletId}`}
+              size={220}
+              className="mt-2"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowQrModal(false)} className="w-full text-xs">
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
