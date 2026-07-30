@@ -361,7 +361,7 @@ export default function Billing() {
             </div>
 
             <QRCodeGenerator
-              value={`https://customer.thesmartbills.com/menuitems/${qrTableId || "Table-1"}?outletId=${activeOutletId}`}
+              value={`https://customer.thesmartbills.com/?tableId=${qrTableId || "Table-1"}&outletId=${activeOutletId}`}
               size={220}
               className="mt-2"
             />
