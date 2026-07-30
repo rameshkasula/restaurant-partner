@@ -5,10 +5,9 @@ import {
   useUpdateRequestStatus,
 } from "@/hooks/useRequests"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { StatCard } from "@/components/StatCard"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import {
   Dialog,
@@ -371,60 +370,29 @@ export default function Requests() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Requests
-            </CardTitle>
-            <IconListDetails className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-12" /> : totalRequests}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              All time submissions
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Requests"
+          value={totalRequests}
+          loading={isLoading}
+          description="All time submissions"
+          icon={IconListDetails}
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Recent Submissions
-            </CardTitle>
-            <IconCalendar className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? (
-                <Skeleton className="h-8 w-12" />
-              ) : (
-                recentRequestsCount
-              )}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Submitted in the last 7 days
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Recent Submissions"
+          value={recentRequestsCount}
+          loading={isLoading}
+          description="Submitted in the last 7 days"
+          icon={IconCalendar}
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Cities Represented
-            </CardTitle>
-            <IconMapPin className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-12" /> : uniqueCities}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Geographical distribution
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Cities Represented"
+          value={uniqueCities}
+          loading={isLoading}
+          description="Geographical distribution"
+          icon={IconMapPin}
+        />
       </div>
 
       {/* Toolbar / Filters */}

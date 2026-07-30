@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router-dom"
 import { useRequests } from "@/hooks/useRequests"
-import { orgApi } from "@/api/organizations.api"
+import { orgApi, type Organization } from "@/api/organizations.api"
+import { StatCard } from "@/components/StatCard"
 import { useOutlets } from "@/hooks/useOutlets"
+import { type Outlet } from "@/api/outlets.api"
+import { type RestaurantRequest } from "@/api/requests.api"
 import {
   Card,
   CardContent,
@@ -34,25 +37,35 @@ const QK = {
 export default function Dashboard() {
   // Queries
   const { data: dataRequests, isLoading: requestsLoading } = useRequests({ limit: "100" })
-  const requests = dataRequests?.data || []
-  const { data: orgs = [], isLoading: orgsLoading } = useQuery({
+  const requests: RestaurantRequest[] = Array.isArray(dataRequests)
+    ? dataRequests
+    : (dataRequests && Array.isArray((dataRequests as any).data) ? (dataRequests as any).data : [])
+
+  const { data: rawOrgs = [], isLoading: orgsLoading } = useQuery({
     queryKey: QK.orgs,
     queryFn: orgApi.list,
   })
-  const { data: outlets = [], isLoading: outletsLoading } = useOutlets()
+  const orgs: Organization[] = Array.isArray(rawOrgs)
+    ? rawOrgs
+    : (rawOrgs && Array.isArray((rawOrgs as any).data) ? (rawOrgs as any).data : [])
+
+  const { data: rawOutlets = [], isLoading: outletsLoading } = useOutlets()
+  const outlets: Outlet[] = Array.isArray(rawOutlets)
+    ? rawOutlets
+    : (rawOutlets && Array.isArray((rawOutlets as any).data) ? (rawOutlets as any).data : [])
 
   // Statistics
-  const activeOrgsCount = orgs.filter((o) => !o.deletedAt).length
-  const activeOutletsCount = outlets.filter((o) => !o.deletedAt).length
+  const activeOrgsCount = orgs.filter((o: Organization) => !o.deletedAt).length
+  const activeOutletsCount = outlets.filter((o: Outlet) => !o.deletedAt).length
   const pendingRequestsCount = requests.length // Active requests represent the waitlist
 
   // Get top 3 most recent requests
-  const recentRequests = [...requests]
+  const recentRequests = Array.isArray(requests) ? [...requests]
     .sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
     )
-    .slice(0, 3)
+    .slice(0, 3) : []
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -71,68 +84,30 @@ export default function Dashboard() {
 
       {/* ── Statistics Cards ── */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending Requests
-            </CardTitle>
-            <IconClock className="size-4 animate-pulse text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {requestsLoading ? (
-                <Skeleton className="h-8 w-12" />
-              ) : (
-                pendingRequestsCount
-              )}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Waitlisted partners
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Pending Requests"
+          value={pendingRequestsCount}
+          loading={requestsLoading}
+          description="Waitlisted partners"
+          icon={IconClock}
+          iconClassName="size-4 animate-pulse text-primary"
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Organizations
-            </CardTitle>
-            <IconBuildingStore className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {orgsLoading ? (
-                <Skeleton className="h-8 w-12" />
-              ) : (
-                activeOrgsCount
-              )}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Onboarded restaurant entities
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Active Organizations"
+          value={activeOrgsCount}
+          loading={orgsLoading}
+          description="Onboarded restaurant entities"
+          icon={IconBuildingStore}
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Outlets
-            </CardTitle>
-            <IconListDetails className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {outletsLoading ? (
-                <Skeleton className="h-8 w-12" />
-              ) : (
-                activeOutletsCount
-              )}
-            </div>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
-              Live operating restaurant branches
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Active Outlets"
+          value={activeOutletsCount}
+          loading={outletsLoading}
+          description="Live operating restaurant branches"
+          icon={IconListDetails}
+        />
       </div>
 
       {/* ── Main Dashboard Columns ── */}
