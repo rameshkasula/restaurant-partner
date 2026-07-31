@@ -11,6 +11,7 @@ interface MenuCatalogProps {
   menuLoading: boolean
   filteredMenuItems: MenuItem[]
   addToCart: (itemId: string) => void
+  cart: Record<string, number>
 }
 
 export function MenuCatalog({
@@ -19,6 +20,7 @@ export function MenuCatalog({
   menuLoading,
   filteredMenuItems,
   addToCart,
+  cart,
 }: MenuCatalogProps) {
   return (
     <Card className="shadow-xs border-border/70">
@@ -72,36 +74,74 @@ export function MenuCatalog({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {filteredMenuItems.map((item) => (
-              <button
-                key={item._id}
-                type="button"
-                onClick={() => addToCart(item._id)}
-                className="group relative flex cursor-pointer flex-col justify-between rounded-xl border border-border/80 bg-card p-3.5 text-left transition-all duration-150 hover:border-primary/40 hover:bg-muted/40 hover:shadow-xs active:scale-[0.98]"
-              >
-                <div>
-                  <span className="line-clamp-2 text-xs font-semibold text-foreground transition-colors group-hover:text-primary">
-                    {item.name}
-                  </span>
-                  {item.category && (
-                    <span className="mt-0.5 inline-block text-[10px] text-muted-foreground uppercase tracking-wider">
-                      {item.category}
+            {filteredMenuItems.map((item) => {
+              const inCartQty = cart[item._id] || 0
+              const isOutOfStock = item.stock <= 0
+              const isMaxedOut = inCartQty >= item.stock
+              const remainingStock = Math.max(0, item.stock - inCartQty)
+
+              return (
+                <button
+                  key={item._id}
+                  type="button"
+                  onClick={() => !isMaxedOut && addToCart(item._id)}
+                  disabled={isMaxedOut}
+                  className={`group relative flex flex-col justify-between rounded-xl border p-3.5 text-left transition-all duration-150 ${
+                    isMaxedOut
+                      ? "cursor-not-allowed border-border/40 bg-muted/20 opacity-60"
+                      : "cursor-pointer border-border/80 bg-card hover:border-primary/40 hover:bg-muted/40 hover:shadow-xs active:scale-[0.98]"
+                  }`}
+                >
+                  <div className="w-full">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className={`line-clamp-2 text-xs font-semibold transition-colors ${
+                        isMaxedOut ? "text-muted-foreground" : "text-foreground group-hover:text-primary"
+                      }`}>
+                        {item.name}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      {item.category && (
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          {item.category}
+                        </span>
+                      )}
+                      
+                      {isOutOfStock ? (
+                        <span className="rounded bg-destructive/10 px-1 py-0.5 text-[9px] font-bold text-destructive">
+                          Out of stock
+                        </span>
+                      ) : isMaxedOut ? (
+                        <span className="rounded bg-amber-500/10 px-1 py-0.5 text-[9px] font-bold text-amber-600">
+                          Max reached
+                        </span>
+                      ) : remainingStock <= 5 ? (
+                        <span className="text-[9px] font-semibold text-amber-600">
+                          Only {remainingStock} left
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-muted-foreground">
+                          Stock: {remainingStock}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex w-full items-center justify-between border-t border-dashed border-border/60 pt-2.5">
+                    <span className={`text-xs font-bold ${isMaxedOut ? "text-muted-foreground" : "text-foreground"}`}>
+                      ₹{item.price.toFixed(2)}
                     </span>
-                  )}
-                </div>
 
-                <div className="mt-3 flex w-full items-center justify-between border-t border-dashed border-border/60 pt-2.5">
-                  <span className="text-xs font-bold text-foreground">
-                    ₹{item.price.toFixed(2)}
-                  </span>
-
-                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <IconPlus className="size-2.5" />
-                    Add
-                  </span>
-                </div>
-              </button>
-            ))}
+                    {!isMaxedOut && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <IconPlus className="size-2.5" />
+                        Add
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         )}
       </CardContent>

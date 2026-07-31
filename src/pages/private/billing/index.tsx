@@ -118,11 +118,21 @@ export default function Billing() {
 
   // Cart Actions
   const addToCart = (itemId: string) => {
+    const item = menuMap[itemId]
+    if (!item) return
+
+    const currentQty = cart[itemId] || 0
+    if (currentQty >= item.stock) {
+      toast.error(`Cannot add more. Only ${item.stock} unit(s) of "${item.name}" in stock.`)
+      return
+    }
+
     setCart((prev) => ({
       ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
+      [itemId]: currentQty + 1,
     }))
   }
+
 
   const removeFromCart = (itemId: string) => {
     setCart((prev) => {
@@ -283,6 +293,7 @@ export default function Billing() {
               menuLoading={menuLoading}
               filteredMenuItems={filteredMenuItems}
               addToCart={addToCart}
+              cart={cart}
             />
           </div>
 
