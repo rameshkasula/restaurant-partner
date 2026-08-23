@@ -32,6 +32,8 @@ export interface MenuItem {
   outletId: string
   category: MenuItemCategory
   name: string
+  description: string
+  isVeg: boolean
   price: number
   isAvailable: boolean
   stock: number
@@ -46,6 +48,8 @@ export interface CreateMenuItemDto {
   outletId: string
   category: MenuItemCategory
   name: string
+  description: string
+  isVeg: boolean
   price: number
   isAvailable?: boolean
   stock?: number
@@ -57,6 +61,8 @@ export interface UpdateMenuItemDto {
   outletId?: string
   category?: MenuItemCategory
   name?: string
+  description?: string
+  isVeg?: boolean
   price?: number
   isAvailable?: boolean
   stock?: number
@@ -80,4 +86,6 @@ export const menuItemApi = {
     axiosInstance.patch<MenuItem>(`/menu-item/${id}/status`, { status }).then((r) => r.data),
   delete: (id: string) => axiosInstance.delete(`/menu-item/${id}`).then((r) => r.data),
   restore: (id: string) => axiosInstance.post<MenuItem>(`/menu-item/${id}/restore`).then((r) => r.data),
+  bulkCreate: (items: CreateMenuItemDto[]) =>
+    axiosInstance.post<MenuItem[]>("/menu-item/bulk", items).then((r) => r.data),
 }

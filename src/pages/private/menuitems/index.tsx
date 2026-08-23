@@ -8,6 +8,7 @@ import {
   IconTrash,
   IconRotateDot,
   IconChefHat,
+  IconUpload,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,7 @@ import {
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { DataTable, type ColumnDef } from "@/components/DataTable/DataTable"
 import CreateEditMenuItem from "./CreateEditMenuItem"
+import BulkUploadMenuItem from "./BulkUploadMenuItem"
 import { StatusSelect } from "@/components/StatusSelect"
 
 // ── Helpers & Styling Constants ──────────────────────────────────────────────
@@ -112,6 +114,7 @@ export default function MenuItems() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false)
 
   // Queries & Mutations
   const { data: menuItems = [], isLoading } = useMenuItems(
@@ -397,21 +400,38 @@ export default function MenuItems() {
           </div>
         }
         headerActions={
-          <Button
-            onClick={() => {
-              setEditingItem(null)
-              setFormOpen(true)
-            }}
-            size="sm"
-            className="gap-1.5"
-          >
-            <IconPlus className="size-3.5" />
-            Add Menu Item
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setBulkUploadOpen(true)}
+              size="sm"
+              className="gap-1.5"
+            >
+              <IconUpload className="size-3.5" />
+              Bulk Upload
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingItem(null)
+                setFormOpen(true)
+              }}
+              size="sm"
+              className="gap-1.5"
+            >
+              <IconPlus className="size-3.5" />
+              Add Menu Item
+            </Button>
+          </div>
         }
       />
 
       {/* ── Dialogs ── */}
+      <BulkUploadMenuItem
+        open={bulkUploadOpen}
+        onOpenChange={setBulkUploadOpen}
+        lockedOutletId={lockedOutletId}
+      />
+
       <CreateEditMenuItem
         open={formOpen}
         onOpenChange={setFormOpen}

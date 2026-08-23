@@ -63,7 +63,7 @@ const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Early Access", href: "#early-access" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Pricing", href: APP_PATHS.PRICING },
 ]
 
 function Navbar() {
@@ -94,13 +94,23 @@ function Navbar() {
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map((link) => (
-            <a
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {link.label}
-            </a>
+            link.href.startsWith("#") ? (
+              <a
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            )
           ))}
         </nav>
 
@@ -160,16 +170,27 @@ function Navbar() {
       {mobileOpen && (
         <div className="border-t border-border bg-background/95 backdrop-blur-xl md:hidden">
           <nav className="flex flex-col gap-1 px-4 py-4">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                {link.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
             <Separator className="my-3" />
             <Link to={APP_PATHS.LOGIN} onClick={() => setMobileOpen(false)}>
               <Button variant="outline" className="w-full">
@@ -192,6 +213,7 @@ function Navbar() {
     </header>
   )
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HERO
@@ -932,7 +954,7 @@ const FOOTER_LINKS = [
     heading: "Product",
     links: [
       { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Pricing", href: APP_PATHS.PRICING },
     ],
   },
   {

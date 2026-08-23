@@ -1,0 +1,11 @@
+name,description,category,price,stock,isVeg,isAvailable,status,imageUrl
+Butter Chicken,Creamy tomato-based curry with tender chicken pieces,MAIN_COURSE,320,50,false,true,active,https://example.com/butter-chicken.jpg
+Masala Chai,Spiced Indian tea brewed with ginger and cardamom,BEVERAGE,40,100,true,true,active,
+Gulab Jamun,Soft milk-solid dumplings soaked in rose-flavored sugar syrup,DESSERT,80,30,true,true,active,https://example.com/gulab-jamun.jpg
+Paneer Tikka,Marinated cottage cheese grilled in a tandoor with bell peppers,STARTER,180,25,true,true,active,
+Veg Fried Rice,Stir-fried rice with mixed vegetables and soy sauce,MAIN_COURSE,160,40,true,true,active,
+Mango Lassi,Chilled yogurt drink blended with fresh mango pulp,BEVERAGE,90,60,true,true,active,
+French Fries,Crispy golden potato fries seasoned with salt and pepper,SIDES,120,80,true,true,active,
+Chocolate Brownie,Rich fudgy chocolate brownie served warm with chocolate sauce,DESSERT,110,20,true,true,active,
+Chicken Wings,Juicy chicken wings tossed in spicy buffalo sauce,STARTER,220,15,false,true,active,
+Dal Makhani,Slow-cooked black lentils in a rich buttery tomato gravy,MAIN_COURSE,200,35,true,true,active,

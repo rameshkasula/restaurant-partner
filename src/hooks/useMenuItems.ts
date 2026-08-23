@@ -1,17 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { menuItemApi, type CreateMenuItemDto, type UpdateMenuItemDto, type MenuItemStatus } from "@/api/menu-items.api"
+import {
+  menuItemApi,
+  type CreateMenuItemDto,
+  type UpdateMenuItemDto,
+  type MenuItemStatus,
+} from "@/api/menu-items.api"
 
 export const menuItemKeys = {
   all: ["menuItems"] as const,
   lists: () => [...menuItemKeys.all, "list"] as const,
-  list: (outletId?: string, includeDeleted?: boolean) => [...menuItemKeys.lists(), { outletId, includeDeleted }] as const,
+  list: (outletId?: string, includeDeleted?: boolean) =>
+    [...menuItemKeys.lists(), { outletId, includeDeleted }] as const,
   details: () => [...menuItemKeys.all, "detail"] as const,
   detail: (id: string) => [...menuItemKeys.details(), id] as const,
 }
 
 import { saveMenuItems, getMenuItems } from "@/utils/indexedDB"
 
-export function useMenuItems(outletId?: string, includeDeleted = false, enabled = true) {
+export function useMenuItems(
+  outletId?: string,
+  includeDeleted = false,
+  enabled = true
+) {
   return useQuery({
     queryKey: menuItemKeys.list(outletId, includeDeleted),
     queryFn: async () => {
@@ -52,7 +62,9 @@ export function useUpdateMenuItem() {
       menuItemApi.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: menuItemKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: menuItemKeys.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: menuItemKeys.detail(variables.id),
+      })
     },
   })
 }
@@ -64,7 +76,9 @@ export function useUpdateMenuItemStatus() {
       menuItemApi.updateStatus(id, status),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: menuItemKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: menuItemKeys.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: menuItemKeys.detail(variables.id),
+      })
     },
   })
 }
@@ -85,6 +99,19 @@ export function useRestoreMenuItem() {
     mutationFn: (id: string) => menuItemApi.restore(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: menuItemKeys.lists() })
+    },
+  })
+}
+
+export function useBulkCreateMenuItems() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (items: CreateMenuItemDto[]) => menuItemApi.bulkCreate(items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: menuItemKeys.lists() })
+    },
+    onError: () => {
+      console.log("Failed to bulk create menu items")
     },
   })
 }

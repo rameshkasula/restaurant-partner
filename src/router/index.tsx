@@ -28,6 +28,7 @@ const TermsOfService = Loadable(
 const CookiePolicy = Loadable(lazy(() => import("@pages/public/CookiePolicy")))
 const Blogs = Loadable(lazy(() => import("@pages/public/Blogs")))
 const Careers = Loadable(lazy(() => import("@pages/public/Careers")))
+const PricingPage = Loadable(lazy(() => import("@pages/public/Pricing")))
 const Register = Loadable(lazy(() => import("@pages/auth/Register")))
 const Login = Loadable(lazy(() => import("@pages/auth/Login")))
 const ForgotPassword = Loadable(
@@ -109,6 +110,11 @@ const router = createBrowserRouter([
   {
     path: APP_PATHS.CAREERS,
     element: <Careers />,
+    errorElement: <GlobalErrorBoundary />,
+  },
+  {
+    path: APP_PATHS.PRICING,
+    element: <PricingPage />,
     errorElement: <GlobalErrorBoundary />,
   },
   {

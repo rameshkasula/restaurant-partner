@@ -9,6 +9,7 @@ export const APP_PATHS = {
   COOKIE_POLICY: "/cookie-policy",
   BLOGS: "/blogs",
   CAREERS: "/careers",
+  PRICING: "/pricing",
 
   // Private Auth
   FORGOT_PASSWORD: "/forgot-password",
