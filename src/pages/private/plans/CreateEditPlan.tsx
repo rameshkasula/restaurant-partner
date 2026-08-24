@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -20,7 +20,6 @@ import {
   IconLoader2,
   IconPlus,
   IconPencil,
-  IconTrash,
   IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
@@ -38,7 +37,9 @@ const planSchema = z.object({
   maxMenuItems: z.number().int().min(1).nullable(),
   isHighlighted: z.boolean(),
   status: z.nativeEnum(PlanStatus),
-  features: z.array(z.string().min(1)).min(1, "At least one feature is required"),
+  features: z
+    .array(z.string().min(1))
+    .min(1, "At least one feature is required"),
 })
 
 type PlanFormData = z.infer<typeof planSchema>
@@ -109,7 +110,7 @@ function FeaturesEditor({
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="text-muted-foreground hover:text-destructive transition-colors"
+                className="text-muted-foreground transition-colors hover:text-destructive"
               >
                 <IconX className="size-3" />
               </button>
@@ -197,7 +198,7 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isEdit ? (
@@ -214,7 +215,10 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 py-2">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 py-2"
+        >
           {apiError && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {apiError}
@@ -295,7 +299,7 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
                   disabled={maxOutlets === null}
                 />
               </div>
-              <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
                 <input
                   type="checkbox"
                   className="accent-primary"
@@ -325,7 +329,7 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
                   disabled={maxMenuItems === null}
                 />
               </div>
-              <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted-foreground">
                 <input
                   type="checkbox"
                   className="accent-primary"
@@ -359,11 +363,15 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
           {/* Highlighted toggle */}
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-0.5">
-              <Label htmlFor="plan-highlighted" className="cursor-pointer font-medium">
+              <Label
+                htmlFor="plan-highlighted"
+                className="cursor-pointer font-medium"
+              >
                 Most Popular / Highlighted
               </Label>
               <p className="text-[11px] text-muted-foreground">
-                Adds a "Most Popular" badge and primary ring to this plan on the pricing page.
+                Adds a "Most Popular" badge and primary ring to this plan on the
+                pricing page.
               </p>
             </div>
             <Switch
@@ -379,8 +387,7 @@ export default function CreateEditPlan({ open, onOpenChange, plan }: Props) {
             value={features}
             onChange={(v) => setValue("features", v)}
             error={
-              errors.features?.message ??
-              (errors.features as any)?.[0]?.message
+              errors.features?.message ?? (errors.features as any)?.[0]?.message
             }
           />
 

@@ -14,7 +14,7 @@ import { getAccessToken } from "@/utils/tokens"
 import { useLiveOrders, useUpdateOrder } from "@/hooks/useOrders"
 import { useMenuItems } from "@/hooks/useMenuItems"
 import { useOutlets } from "@/hooks/useOutlets"
-import { OrderStatus, type Order, OrderType, ORDER_TYPE_LABELS } from "@/api/orders.api"
+import { OrderStatus, type Order, ORDER_TYPE_LABELS } from "@/api/orders.api"
 import { UserRole } from "@/api/users.api"
 import { useOutletStore } from "@/store/outletStore"
 import { DataTable } from "@/components/DataTable/DataTable"
@@ -187,7 +187,11 @@ export default function LiveOrders() {
   // Safe parsing live pipeline orders list (recentOrders)
   const pipelineOrders: Order[] = useMemo(() => {
     if (!ordersData) return []
-    if (ordersData && typeof ordersData === "object" && "recentOrders" in ordersData) {
+    if (
+      ordersData &&
+      typeof ordersData === "object" &&
+      "recentOrders" in ordersData
+    ) {
       return (ordersData as any).recentOrders || []
     }
     // Fallback if backend returned raw array in development
@@ -198,7 +202,11 @@ export default function LiveOrders() {
   // Safe parsing historical orders list (outletOrders.data)
   const historyOrders: Order[] = useMemo(() => {
     if (!ordersData) return []
-    if (ordersData && typeof ordersData === "object" && "outletOrders" in ordersData) {
+    if (
+      ordersData &&
+      typeof ordersData === "object" &&
+      "outletOrders" in ordersData
+    ) {
       return (ordersData as any).outletOrders?.data || []
     }
     // Fallback if backend returned raw array in development
@@ -207,7 +215,11 @@ export default function LiveOrders() {
   }, [ordersData])
 
   const paginationMeta = useMemo(() => {
-    if (ordersData && typeof ordersData === "object" && "outletOrders" in ordersData) {
+    if (
+      ordersData &&
+      typeof ordersData === "object" &&
+      "outletOrders" in ordersData
+    ) {
       return (ordersData as any).outletOrders?.pagination || null
     }
     return null
@@ -227,7 +239,9 @@ export default function LiveOrders() {
   }, [pipelineOrders])
 
   const readyOrders = useMemo(() => {
-    return pipelineOrders.filter((o) => o.status === OrderStatus.READY && !o.isDeleted)
+    return pipelineOrders.filter(
+      (o) => o.status === OrderStatus.READY && !o.isDeleted
+    )
   }, [pipelineOrders])
 
   const copyOrderId = (id: any) => {
@@ -294,7 +308,9 @@ export default function LiveOrders() {
         sortable: true,
         cell: ({ row }) => (
           <span className="text-xs font-semibold">
-            {row.orderType ? ORDER_TYPE_LABELS[row.orderType] || row.orderType : "Dine In"}
+            {row.orderType
+              ? ORDER_TYPE_LABELS[row.orderType] || row.orderType
+              : "Dine In"}
           </span>
         ),
       },

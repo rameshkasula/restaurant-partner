@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { IconAlertCircle } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { useCreateMenuItem, useUpdateMenuItem } from "@/hooks/useMenuItems"
@@ -21,6 +22,8 @@ import { FormDialog } from "@/components/FormDialog"
 const menuItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(150),
   category: z.nativeEnum(MenuItemCategory),
+  description: z.string().min(1, "Description is required").max(500),
+  isVeg: z.boolean(),
   price: z.number().min(0, "Price cannot be negative"),
   stock: z.number().min(0, "Stock cannot be negative"),
   isAvailable: z.boolean(),
@@ -71,6 +74,8 @@ export default function CreateEditMenuItem({
     defaultValues: {
       name: menuItem?.name || "",
       category: menuItem?.category || MenuItemCategory.STARTER,
+      description: menuItem?.description || "",
+      isVeg: menuItem?.isVeg ?? false,
       price: menuItem?.price || 0,
       stock: menuItem?.stock ?? 10,
       isAvailable: menuItem?.isAvailable ?? true,
@@ -85,6 +90,8 @@ export default function CreateEditMenuItem({
       reset({
         name: menuItem?.name || "",
         category: menuItem?.category || MenuItemCategory.STARTER,
+        description: menuItem?.description || "",
+        isVeg: menuItem?.isVeg ?? false,
         price: menuItem?.price || 0,
         stock: menuItem?.stock ?? 10,
         isAvailable: menuItem?.isAvailable ?? true,
@@ -105,6 +112,8 @@ export default function CreateEditMenuItem({
           data: {
             name: data.name.trim(),
             category: data.category,
+            description: data.description.trim(),
+            isVeg: data.isVeg,
             price: Number(data.price),
             stock: Number(data.stock),
             isAvailable: data.isAvailable,
@@ -118,6 +127,8 @@ export default function CreateEditMenuItem({
         await createMutation.mutateAsync({
           name: data.name.trim(),
           category: data.category,
+          description: data.description.trim(),
+          isVeg: data.isVeg,
           price: Number(data.price),
           stock: Number(data.stock),
           isAvailable: data.isAvailable,
@@ -164,6 +175,19 @@ export default function CreateEditMenuItem({
           {...register("name")}
         />
         <InlineError error={errors.name?.message} />
+      </div>
+
+      {/* Description */}
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="item-description">Description *</Label>
+        <Textarea
+          id="item-description"
+          placeholder="Brief description of the menu item..."
+          aria-invalid={!!errors.description}
+          {...register("description")}
+          rows={3}
+        />
+        <InlineError error={errors.description?.message} />
       </div>
 
       {/* Category & Status Grid */}
@@ -245,6 +269,29 @@ export default function CreateEditMenuItem({
           {...register("imageUrl")}
         />
         <InlineError error={errors.imageUrl?.message} />
+      </div>
+
+      {/* Veg / Non-Veg Toggle */}
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div className="space-y-0.5">
+          <Label htmlFor="item-veg" className="cursor-pointer font-medium">
+            Vegetarian (Veg) Item
+          </Label>
+          <p className="text-[11px] text-muted-foreground">
+            Mark this item as vegetarian. Green indicator is shown to customers.
+          </p>
+        </div>
+        <Controller
+          name="isVeg"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              id="item-veg"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
       </div>
 
       {/* Is Available Toggle */}

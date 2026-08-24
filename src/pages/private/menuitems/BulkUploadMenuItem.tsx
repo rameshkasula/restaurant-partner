@@ -154,12 +154,12 @@ function parseCSV(csvText: string, outletId: string): ParsedRow[] {
     const isAvailable = isAvailableRaw === "" ? true : isAvailableRaw === "true"
 
     // ── status (optional, strict enum — error if invalid) ─────────────────────
-    const statusRaw = (raw["status"] ?? "").trim().toLowerCase() as MenuItemStatus
+    const statusRaw = (raw["status"] ?? "").trim().toLowerCase()
     let status: MenuItemStatus
     if (statusRaw === "") {
       status = MenuItemStatus.ACTIVE // default when omitted
-    } else if (VALID_STATUSES.includes(statusRaw)) {
-      status = statusRaw
+    } else if (VALID_STATUSES.includes(statusRaw as MenuItemStatus)) {
+      status = statusRaw as MenuItemStatus
     } else {
       errors.push(
         `status must be one of: ${VALID_STATUSES.join(", ")} (or leave empty for default "active")`

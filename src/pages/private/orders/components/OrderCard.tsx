@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { IconCopy, IconCheck, IconX, IconPackage } from "@tabler/icons-react"
-import { OrderStatus, type Order, OrderType, ORDER_TYPE_LABELS } from "@/api/orders.api"
+import { OrderStatus, type Order, ORDER_TYPE_LABELS } from "@/api/orders.api"
 import { PAYMENT_MODE_ICONS } from "./orderHelpers"
 import {
   getTimeAgo,
@@ -154,7 +154,9 @@ export function OrderCard({
               {formatTime(order.createdAt)} •{" "}
               {getTimeAgo(order.createdAt, timeTrigger)} •{" "}
               <span className="font-semibold text-primary">
-                {order.orderType ? ORDER_TYPE_LABELS[order.orderType] : "Dine In"}
+                {order.orderType
+                  ? ORDER_TYPE_LABELS[order.orderType]
+                  : "Dine In"}
               </span>
             </span>
           </div>
