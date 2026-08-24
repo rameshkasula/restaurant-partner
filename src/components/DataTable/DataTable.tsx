@@ -19,6 +19,7 @@ import {
 import { Pagination } from "./Pagination"
 import { useVirtualizer } from "./useVirtualizer"
 import { cn } from "@/lib/utils"
+import { ensureArray } from "@/utils/arrays"
 
 export interface ColumnDef<T> {
   header: React.ReactNode
@@ -109,7 +110,7 @@ export function DataTable<T>({
 
   // 2. Filter & Sort Data
   const processedData = useMemo(() => {
-    let result = [...data]
+    let result = [...ensureArray<T>(data)]
 
     // Local Search
     if (searchQuery.trim() !== "") {

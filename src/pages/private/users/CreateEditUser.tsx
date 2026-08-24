@@ -26,6 +26,8 @@ import {
 import { toast } from "sonner"
 import { UserRole, USER_ROLE_LABELS, type User } from "@/api/users.api"
 import { useCreateUser, useUpdateUser } from "@/hooks/useUsers"
+import { getIdString } from "@/utils/formatters"
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -97,7 +99,7 @@ function UserDialogForm({
   const filteredOutlets = outlets.filter(
     (o) =>
       !o.deletedAt &&
-      (selectedOrgId ? o.organizationId === selectedOrgId : true)
+      (selectedOrgId ? getIdString(o.organizationId) === selectedOrgId : true)
   )
 
   const isPlatformRole =
@@ -412,8 +414,8 @@ export function EditUserDialog({
     email: user.email,
     password: "",
     role: user.role,
-    organizationId: user.organizationId ?? "",
-    outletId: user.outletId ?? "",
+    organizationId: getIdString(user.organizationId),
+    outletId: getIdString(user.outletId),
   }
 
   const onSubmit = (data: UserFormData) => {

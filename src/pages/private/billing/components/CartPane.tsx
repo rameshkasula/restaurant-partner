@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { IconShoppingCart, IconMinus, IconPlus, IconLoader2, IconTrash } from "@tabler/icons-react"
-import { OrderStatus, PaymentMode } from "@/api/orders.api"
+import { OrderStatus, PaymentMode, OrderType, ORDER_TYPE_LABELS } from "@/api/orders.api"
 import { type MenuItem } from "@/api/menu-items.api"
 import * as React from "react"
 
@@ -16,6 +16,8 @@ interface CartPaneProps {
   setPaymentMode: (pm: PaymentMode) => void
   orderStatus: OrderStatus
   setOrderStatus: (os: OrderStatus) => void
+  orderType: OrderType
+  setOrderType: (ot: OrderType) => void
   handlePlaceOrder: (tableNo?: number, note?: string) => void
   clearCart: () => void
   removeFromCart: (id: string) => void
@@ -31,6 +33,8 @@ export function CartPane({
   setPaymentMode,
   orderStatus,
   setOrderStatus,
+  orderType,
+  setOrderType,
   handlePlaceOrder,
   clearCart,
   removeFromCart,
@@ -191,10 +195,10 @@ export function CartPane({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {/* Payment Mode */}
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cart-payment" className="text-xs font-semibold">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="cart-payment" className="text-[11px] font-semibold">
                   Payment Mode
                 </Label>
                 <NativeSelect
@@ -214,8 +218,8 @@ export function CartPane({
               </div>
 
               {/* Status */}
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="cart-status" className="text-xs font-semibold">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="cart-status" className="text-[11px] font-semibold">
                   Order Status
                 </Label>
                 <NativeSelect
@@ -229,6 +233,27 @@ export function CartPane({
                   {Object.values(OrderStatus).map((os) => (
                     <NativeSelectOption key={os} value={os}>
                       {os}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </div>
+
+              {/* Order Type */}
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="cart-type" className="text-[11px] font-semibold">
+                  Order Type
+                </Label>
+                <NativeSelect
+                  id="cart-type"
+                  value={orderType}
+                  onChange={(e) =>
+                    setOrderType(e.target.value as OrderType)
+                  }
+                  className="h-8 text-xs"
+                >
+                  {Object.values(OrderType).map((ot) => (
+                    <NativeSelectOption key={ot} value={ot}>
+                      {ORDER_TYPE_LABELS[ot]}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>

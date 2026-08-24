@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { IconLoader2 } from "@tabler/icons-react"
-import { type Order, OrderStatus, PaymentMode } from "@/api/orders.api"
+import { type Order, OrderStatus, PaymentMode, OrderType, ORDER_TYPE_LABELS } from "@/api/orders.api"
 
 interface EditOrderDialogProps {
   open: boolean
@@ -22,6 +22,7 @@ interface EditOrderDialogProps {
   onSubmit: (data: {
     status: OrderStatus
     paymentMode: PaymentMode | null
+    orderType: OrderType
   }) => void
   isPending: boolean
 }
@@ -36,6 +37,7 @@ export function EditOrderDialog({
   const { register, handleSubmit, reset } = useForm<{
     status: OrderStatus
     paymentMode: PaymentMode | ""
+    orderType: OrderType
   }>()
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export function EditOrderDialog({
       reset({
         status: order.status,
         paymentMode: order.bill.paymentMode ?? "",
+        orderType: order.orderType || OrderType.DINE_IN,
       })
     }
   }, [open, order, reset])
@@ -50,10 +53,12 @@ export function EditOrderDialog({
   const onFormSubmit = (data: {
     status: OrderStatus
     paymentMode: PaymentMode | ""
+    orderType: OrderType
   }) => {
     onSubmit({
       status: data.status,
       paymentMode: data.paymentMode === "" ? null : data.paymentMode,
+      orderType: data.orderType,
     })
   }
 
@@ -61,9 +66,9 @@ export function EditOrderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>Update Order Status</DialogTitle>
+          <DialogTitle>Update Order Details</DialogTitle>
           <DialogDescription>
-            Update the payment or preparation status of this order.
+            Update the payment status, preparation status, or service type of this order.
           </DialogDescription>
         </DialogHeader>
 
@@ -71,6 +76,18 @@ export function EditOrderDialog({
           onSubmit={handleSubmit(onFormSubmit)}
           className="flex flex-col gap-4 py-1"
         >
+          {/* Order Type */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="edit-orderType">Order Type</Label>
+            <NativeSelect id="edit-orderType" {...register("orderType")}>
+              {Object.values(OrderType).map((type) => (
+                <NativeSelectOption key={type} value={type}>
+                  {ORDER_TYPE_LABELS[type]}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
+
           {/* Status */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-status">Preparation Status</Label>
@@ -114,3 +131,4 @@ export function EditOrderDialog({
     </Dialog>
   )
 }
+

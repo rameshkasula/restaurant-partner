@@ -46,7 +46,7 @@ const Organizations = Loadable(
   lazy(() => import("@pages/private/organizations/index"))
 )
 const Requests = Loadable(lazy(() => import("@pages/private/requests/index")))
-const Plans = Loadable(lazy(() => import("@pages/private/Plans")))
+const Plans = Loadable(lazy(() => import("@pages/private/plans/index")))
 const Staff = Loadable(lazy(() => import("@pages/private/Staff")))
 
 // Authentication check based on access token cookie

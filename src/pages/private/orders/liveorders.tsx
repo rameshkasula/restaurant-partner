@@ -14,7 +14,7 @@ import { getAccessToken } from "@/utils/tokens"
 import { useLiveOrders, useUpdateOrder } from "@/hooks/useOrders"
 import { useMenuItems } from "@/hooks/useMenuItems"
 import { useOutlets } from "@/hooks/useOutlets"
-import { OrderStatus, type Order } from "@/api/orders.api"
+import { OrderStatus, type Order, OrderType, ORDER_TYPE_LABELS } from "@/api/orders.api"
 import { UserRole } from "@/api/users.api"
 import { useOutletStore } from "@/store/outletStore"
 import { DataTable } from "@/components/DataTable/DataTable"
@@ -285,6 +285,16 @@ export default function LiveOrders() {
             {typeof row.outletId === "object"
               ? (row.outletId as any)?.name || (row.outletId as any)?._id
               : (row.outletId ?? "N/A")}
+          </span>
+        ),
+      },
+      {
+        header: "Order Type",
+        accessorKey: "orderType",
+        sortable: true,
+        cell: ({ row }) => (
+          <span className="text-xs font-semibold">
+            {row.orderType ? ORDER_TYPE_LABELS[row.orderType] || row.orderType : "Dine In"}
           </span>
         ),
       },

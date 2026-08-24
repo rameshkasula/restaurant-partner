@@ -19,6 +19,20 @@ export const PaymentMode = {
 
 export type PaymentMode = (typeof PaymentMode)[keyof typeof PaymentMode]
 
+export const OrderType = {
+  DINE_IN: "DINE_IN",
+  TAKEAWAY: "TAKEAWAY",
+  DELIVERY: "DELIVERY",
+} as const
+
+export type OrderType = (typeof OrderType)[keyof typeof OrderType]
+
+export const ORDER_TYPE_LABELS: Record<OrderType, string> = {
+  [OrderType.DINE_IN]: "Dine In",
+  [OrderType.TAKEAWAY]: "Takeaway",
+  [OrderType.DELIVERY]: "Delivery",
+}
+
 export interface OrderItem {
   menuItemId: string
   quantity: number
@@ -39,6 +53,7 @@ export interface Order {
   outletId: string
   items: OrderItem[]
   status: OrderStatus
+  orderType: OrderType
   bill: Bill
   tableNo?: number
   note?: string
@@ -51,6 +66,7 @@ export interface CreateOrderDto {
   outletId: string
   items: OrderItem[]
   status?: OrderStatus
+  orderType: OrderType
   bill: Bill
   tableNo?: number
   note?: string
@@ -60,6 +76,7 @@ export interface UpdateOrderDto {
   outletId?: string
   items?: OrderItem[]
   status?: OrderStatus
+  orderType?: OrderType
   bill?: Partial<Bill>
   tableNo?: number
   note?: string

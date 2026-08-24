@@ -34,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getIdString } from "@/utils/formatters"
+
 
 export { UserStatus }
 
@@ -161,7 +163,7 @@ export default function Users() {
   const orgMap = React.useMemo(() => {
     const m: Record<string, string> = {}
     orgs.forEach((o) => {
-      const id = o._id || o.id
+      const id = getIdString(o._id || o.id)
       m[id] = o.name
     })
     return m
@@ -170,7 +172,8 @@ export default function Users() {
   const outletMap = React.useMemo(() => {
     const m: Record<string, string> = {}
     outlets.forEach((o) => {
-      m[o._id] = o.name
+      const id = getIdString(o._id || o.id)
+      m[id] = o.name
     })
     return m
   }, [outlets])
@@ -180,8 +183,12 @@ export default function Users() {
     const lq = search.toLowerCase()
     const matchesSearch =
       (u.email?.toLowerCase() ?? "").includes(lq) ||
-      (u.organizationId ? (orgMap[u.organizationId]?.toLowerCase() ?? "").includes(lq) : false) ||
-      (u.outletId ? (outletMap[u.outletId]?.toLowerCase() ?? "").includes(lq) : false) ||
+      (u.organizationId
+        ? (orgMap[getIdString(u.organizationId)]?.toLowerCase() ?? "").includes(lq)
+        : false) ||
+      (u.outletId
+        ? (outletMap[getIdString(u.outletId)]?.toLowerCase() ?? "").includes(lq)
+        : false) ||
       (u.role?.toLowerCase() ?? "").includes(lq)
     const matchesRole = roleFilter === "ALL" || u.role === roleFilter
     return matchesSearch && matchesRole
@@ -190,8 +197,8 @@ export default function Users() {
   // Map user data for search & lookup in DataTable
   const displayedUsers = React.useMemo(() => {
     return filtered.map((u) => {
-      const orgName = u.organizationId ? (orgMap[u.organizationId] ?? "—") : "—"
-      const outletName = u.outletId ? (outletMap[u.outletId] ?? "—") : "—"
+      const orgName = u.organizationId ? (orgMap[getIdString(u.organizationId)] ?? "—") : "—"
+      const outletName = u.outletId ? (outletMap[getIdString(u.outletId)] ?? "—") : "—"
       return {
         ...u,
         orgName,

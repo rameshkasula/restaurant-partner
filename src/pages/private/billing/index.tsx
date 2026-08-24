@@ -17,6 +17,7 @@ import {
   type Bill,
   OrderStatus,
   PaymentMode,
+  OrderType,
 } from "@/api/orders.api"
 import { type MenuItem } from "@/api/menu-items.api"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
@@ -74,6 +75,7 @@ export default function Billing() {
   const [orderStatus, setOrderStatus] = useState<OrderStatus>(
     OrderStatus.COMPLETED
   )
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.DINE_IN)
   const [searchItem, setSearchItem] = useState("")
 
   // Mutations
@@ -203,6 +205,7 @@ export default function Billing() {
         outletId: activeOutletId,
         items: orderItems,
         status: orderStatus,
+        orderType,
         bill: billPayload,
         tableNo,
         note,
@@ -219,6 +222,7 @@ export default function Billing() {
   const handleEditOrderSubmit = async (data: {
     status: OrderStatus
     paymentMode: PaymentMode | null
+    orderType: OrderType
   }) => {
     if (!editOrder) return
     try {
@@ -226,6 +230,7 @@ export default function Billing() {
         id: editOrder._id,
         data: {
           status: data.status,
+          orderType: data.orderType,
           bill: {
             paymentMode: data.paymentMode,
             paidAt:
@@ -307,6 +312,8 @@ export default function Billing() {
               setPaymentMode={setPaymentMode}
               orderStatus={orderStatus}
               setOrderStatus={setOrderStatus}
+              orderType={orderType}
+              setOrderType={setOrderType}
               handlePlaceOrder={handlePlaceOrder}
               clearCart={clearCart}
               removeFromCart={removeFromCart}

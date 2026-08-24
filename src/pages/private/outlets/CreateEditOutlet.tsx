@@ -20,13 +20,18 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
-import { IconPlus, IconPencil, IconAlertCircle, IconLoader2 } from "@tabler/icons-react"
+import {
+  IconPlus,
+  IconPencil,
+  IconAlertCircle,
+  IconLoader2,
+} from "@tabler/icons-react"
 import { toast } from "sonner"
 
 function InlineError({ error }: { error?: string }) {
   if (!error) return null
   return (
-    <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+    <p className="mt-1 flex items-center gap-1 text-[11px] text-destructive">
       <IconAlertCircle className="size-3 shrink-0" stroke={2} />
       <span>{error}</span>
     </p>
@@ -52,7 +57,12 @@ export function CreateOutletDialog() {
     queryFn: orgApi.list,
   })
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<OutletFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<OutletFormData>({
     defaultValues: {
       name: "",
       organizationId: "",
@@ -61,7 +71,7 @@ export function CreateOutletDialog() {
       gstin: "",
       pan: "",
       status: "active",
-    }
+    },
   })
 
   const { mutate, isPending } = useCreateOutlet()
@@ -120,7 +130,11 @@ export function CreateOutletDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 py-2" noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 py-2"
+          noValidate
+        >
           {apiError && <ErrorMsg message={apiError} />}
 
           <div className="grid grid-cols-2 gap-4">
@@ -144,11 +158,16 @@ export function CreateOutletDialog() {
                 {...register("organizationId")}
               >
                 <OptionPlaceholder value="" label="None (Standalone)" />
-                {orgs.filter(o => !o.deletedAt).map((org) => (
-                  <NativeSelectOption key={org._id || org.id} value={org._id || org.id}>
-                    {org.name}
-                  </NativeSelectOption>
-                ))}
+                {orgs
+                  .filter((o) => !o.deletedAt)
+                  .map((org) => (
+                    <NativeSelectOption
+                      key={org._id || org.id}
+                      value={org._id || org.id}
+                    >
+                      {org.name}
+                    </NativeSelectOption>
+                  ))}
               </NativeSelect>
             </div>
           </div>
@@ -173,9 +192,10 @@ export function CreateOutletDialog() {
                 aria-invalid={!!errors.gstin}
                 {...register("gstin", {
                   pattern: {
-                    value: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-                    message: "Invalid GSTIN format."
-                  }
+                    value:
+                      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+                    message: "Invalid GSTIN format.",
+                  },
                 })}
               />
               <InlineError error={errors.gstin?.message} />
@@ -190,8 +210,8 @@ export function CreateOutletDialog() {
                 {...register("pan", {
                   pattern: {
                     value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-                    message: "Invalid PAN format."
-                  }
+                    message: "Invalid PAN format.",
+                  },
                 })}
               />
               <InlineError error={errors.pan?.message} />
@@ -206,8 +226,12 @@ export function CreateOutletDialog() {
                 className="w-full"
                 {...register("isCustomerapp")}
               >
-                <NativeSelectOption value="false">No (Disabled)</NativeSelectOption>
-                <NativeSelectOption value="true">Yes (Enabled)</NativeSelectOption>
+                <NativeSelectOption value="false">
+                  No (Disabled)
+                </NativeSelectOption>
+                <NativeSelectOption value="true">
+                  Yes (Enabled)
+                </NativeSelectOption>
               </NativeSelect>
             </div>
 
@@ -219,7 +243,9 @@ export function CreateOutletDialog() {
                 {...register("status")}
               >
                 <NativeSelectOption value="active">Active</NativeSelectOption>
-                <NativeSelectOption value="inactive">Inactive</NativeSelectOption>
+                <NativeSelectOption value="inactive">
+                  Inactive
+                </NativeSelectOption>
                 <NativeSelectOption value="on hold">On Hold</NativeSelectOption>
               </NativeSelect>
             </div>
@@ -267,7 +293,12 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
     queryFn: orgApi.list,
   })
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<OutletFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<OutletFormData>({
     defaultValues: {
       name: outlet.name,
       organizationId: getOrgIdString(outlet.organizationId),
@@ -276,7 +307,7 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
       gstin: outlet.gstin || "",
       pan: outlet.pan || "",
       status: outlet.status || "active",
-    }
+    },
   })
 
   // Keep form values in sync with outlet prop if it changes
@@ -298,9 +329,9 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
 
   const onSubmit = (data: OutletFormData) => {
     setApiError("")
-    
+
     // Check if anything actually changed
-    const hasChanged = 
+    const hasChanged =
       data.name.trim() !== outlet.name ||
       data.organizationId !== getOrgIdString(outlet.organizationId) ||
       data.address.trim() !== (outlet.address || "") ||
@@ -368,7 +399,11 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 py-2" noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 py-2"
+          noValidate
+        >
           {apiError && <ErrorMsg message={apiError} />}
 
           <div className="grid grid-cols-2 gap-4">
@@ -391,11 +426,19 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
                 {...register("organizationId")}
               >
                 <OptionPlaceholder value="" label="None (Standalone)" />
-                {orgs.filter(o => !o.deletedAt || (o._id || o.id) === outlet.organizationId).map((org) => (
-                  <NativeSelectOption key={org._id || org.id} value={org._id || org.id}>
-                    {org.name} {org.deletedAt ? "(Deleted)" : ""}
-                  </NativeSelectOption>
-                ))}
+                {orgs
+                  .filter(
+                    (o) =>
+                      !o.deletedAt || (o._id || o.id) === outlet.organizationId
+                  )
+                  .map((org) => (
+                    <NativeSelectOption
+                      key={org._id || org.id}
+                      value={org._id || org.id}
+                    >
+                      {org.name} {org.deletedAt ? "(Deleted)" : ""}
+                    </NativeSelectOption>
+                  ))}
               </NativeSelect>
             </div>
           </div>
@@ -418,9 +461,10 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
                 aria-invalid={!!errors.gstin}
                 {...register("gstin", {
                   pattern: {
-                    value: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-                    message: "Invalid GSTIN format."
-                  }
+                    value:
+                      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+                    message: "Invalid GSTIN format.",
+                  },
                 })}
               />
               <InlineError error={errors.gstin?.message} />
@@ -434,8 +478,8 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
                 {...register("pan", {
                   pattern: {
                     value: /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-                    message: "Invalid PAN format."
-                  }
+                    message: "Invalid PAN format.",
+                  },
                 })}
               />
               <InlineError error={errors.pan?.message} />
@@ -450,8 +494,12 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
                 className="w-full"
                 {...register("isCustomerapp")}
               >
-                <NativeSelectOption value="false">No (Disabled)</NativeSelectOption>
-                <NativeSelectOption value="true">Yes (Enabled)</NativeSelectOption>
+                <NativeSelectOption value="false">
+                  No (Disabled)
+                </NativeSelectOption>
+                <NativeSelectOption value="true">
+                  Yes (Enabled)
+                </NativeSelectOption>
               </NativeSelect>
             </div>
 
@@ -463,7 +511,9 @@ export function EditOutletDialog({ outlet }: EditOutletDialogProps) {
                 {...register("status")}
               >
                 <NativeSelectOption value="active">Active</NativeSelectOption>
-                <NativeSelectOption value="inactive">Inactive</NativeSelectOption>
+                <NativeSelectOption value="inactive">
+                  Inactive
+                </NativeSelectOption>
                 <NativeSelectOption value="on hold">On Hold</NativeSelectOption>
               </NativeSelect>
             </div>

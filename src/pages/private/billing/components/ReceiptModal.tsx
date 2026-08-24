@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { IconPrinter } from "@tabler/icons-react"
-import { type Order } from "@/api/orders.api"
+import { type Order, ORDER_TYPE_LABELS } from "@/api/orders.api"
 import { type Outlet } from "@/api/outlets.api"
 
 interface ReceiptModalProps {
@@ -135,7 +135,9 @@ export function ReceiptModal({
             <span>
               Date: {new Date(order.createdAt).toLocaleString("en-IN")}
             </span>
-            <span className="font-bold uppercase text-primary">{order.status}</span>
+            <span className="font-bold uppercase text-primary">
+              {order.orderType ? ORDER_TYPE_LABELS[order.orderType] || order.orderType : "Dine In"}
+            </span>
           </div>
 
           <div className="my-1 border-t border-dashed" />
@@ -264,7 +266,9 @@ export function ReceiptModal({
 
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
             <span>Date: {new Date(order.createdAt).toLocaleString("en-IN")}</span>
-            <span style={{ fontWeight: "bold", textTransform: "uppercase" }}>{order.status}</span>
+            <span style={{ fontWeight: "bold", textTransform: "uppercase" }}>
+              {order.orderType ? ORDER_TYPE_LABELS[order.orderType] || order.orderType : "Dine In"}
+            </span>
           </div>
 
           <div style={{ borderTop: "1px dashed #000", margin: "6px 0" }} />

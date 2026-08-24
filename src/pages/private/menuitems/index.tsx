@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import {
   IconPlus,
@@ -9,6 +8,9 @@ import {
   IconRotateDot,
   IconChefHat,
   IconUpload,
+  IconCircleCheckFilled,
+  IconCircleX,
+  IconLeaf,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -28,6 +30,7 @@ import {
 } from "@/api/menu-items.api"
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog"
 import { DataTable, type ColumnDef } from "@/components/DataTable/DataTable"
+import { StatPill, StatPillGroup } from "@/components/StatCard"
 import CreateEditMenuItem from "./CreateEditMenuItem"
 import BulkUploadMenuItem from "./BulkUploadMenuItem"
 import { StatusSelect } from "@/components/StatusSelect"
@@ -355,33 +358,64 @@ export default function MenuItems() {
         </div>
       </div>
 
-      {/* ── Filters Card ── */}
-      <Card className="shadow-sm border-border/40">
-        <CardContent className="p-4">
-          {/* Category Tabs */}
-          <div className="flex flex-wrap gap-1.5">
-            <Button
-              variant={selectedCategoryFilter === "ALL" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategoryFilter("ALL")}
-              className="h-8 rounded-full px-4 text-xs"
-            >
-              All Categories
-            </Button>
-            {Object.values(MenuItemCategory).map((cat) => (
-              <Button
-                key={cat}
-                variant={selectedCategoryFilter === cat ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategoryFilter(cat)}
-                className="h-8 rounded-full px-4 text-xs"
-              >
-                {MENU_ITEM_CATEGORY_LABELS[cat]}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* ── Stats + Category Filters ── */}
+      <StatPillGroup>
+        {/* Stat pills */}
+        <StatPill
+          icon={IconChefHat}
+          label="Total Items"
+          value={menuItems.length}
+          iconClassName="text-muted-foreground"
+        />
+        <StatPill
+          icon={IconCircleCheckFilled}
+          label="Available"
+          value={menuItems.filter((i) => i.isAvailable && !i.isDeleted).length}
+          iconClassName="text-emerald-500"
+        />
+        <StatPill
+          icon={IconLeaf}
+          label="Veg"
+          value={menuItems.filter((i) => i.isVeg && !i.isDeleted).length}
+          iconClassName="text-green-600"
+        />
+        <StatPill
+          icon={IconCircleX}
+          label="Deleted"
+          value={menuItems.filter((i) => i.isDeleted).length}
+          iconClassName="text-rose-500"
+        />
+
+        {/* Divider */}
+        <div className="mx-1 w-px self-stretch bg-border/60" aria-hidden />
+
+        {/* Category filter pills */}
+        <button
+          onClick={() => setSelectedCategoryFilter("ALL")}
+          className={cn(
+            "h-7 rounded-full border px-3 text-[11px] font-medium transition-all duration-150",
+            selectedCategoryFilter === "ALL"
+              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+              : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          )}
+        >
+          All
+        </button>
+        {Object.values(MenuItemCategory).map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategoryFilter(cat)}
+            className={cn(
+              "h-7 rounded-full border px-3 text-[11px] font-medium transition-all duration-150",
+              selectedCategoryFilter === cat
+                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            )}
+          >
+            {MENU_ITEM_CATEGORY_LABELS[cat]}
+          </button>
+        ))}
+      </StatPillGroup>
 
       {/* ── Data Table ── */}
       <DataTable
