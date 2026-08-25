@@ -48,6 +48,8 @@ const Organizations = Loadable(
 const Requests = Loadable(lazy(() => import("@pages/private/requests/index")))
 const Plans = Loadable(lazy(() => import("@pages/private/plans/index")))
 const Staff = Loadable(lazy(() => import("@pages/private/Staff")))
+const Kot = Loadable(lazy(() => import("@pages/private/kot")))
+
 
 // Authentication check based on access token cookie
 const isAuthenticated = () => {
@@ -165,6 +167,10 @@ const router = createBrowserRouter([
       {
         path: APP_PATHS.STAFF,
         element: <Staff />,
+      },
+      {
+        path: APP_PATHS.KOT,
+        element: <Kot />,
       },
     ],
   },

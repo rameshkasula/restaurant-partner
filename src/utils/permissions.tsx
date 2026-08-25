@@ -9,6 +9,7 @@ import {
   IconMapPin,
   IconSettings,
   IconUsers,
+  // IconNotebook,
 } from "@tabler/icons-react"
 
 export const ROLES = {
@@ -53,12 +54,7 @@ export const NAV_ITEMS = [
     label: "Analytics",
     path: APP_PATHS.ANALYTICS,
     icon: IconLayoutDashboard,
-    allowedRoles: [
-      ROLES.RESTAURANT_OWNER,
-      ROLES.MANAGER,
-      ROLES.POS_STAFF,
-      ROLES.KITCHEN_STAFF,
-    ],
+    allowedRoles: [ROLES.RESTAURANT_OWNER, ROLES.MANAGER, ROLES.POS_STAFF],
   },
   {
     label: "Requests",
@@ -76,23 +72,13 @@ export const NAV_ITEMS = [
     label: "Orders",
     path: APP_PATHS.ORDERS,
     icon: IconReceipt,
-    allowedRoles: [
-      ROLES.RESTAURANT_OWNER,
-      ROLES.MANAGER,
-      ROLES.POS_STAFF,
-      ROLES.KITCHEN_STAFF,
-    ],
+    allowedRoles: [ROLES.RESTAURANT_OWNER, ROLES.MANAGER, ROLES.POS_STAFF],
   },
   {
     label: "Billing",
     path: APP_PATHS.BILLING,
     icon: IconReceipt,
-    allowedRoles: [
-      ROLES.RESTAURANT_OWNER,
-      ROLES.MANAGER,
-      ROLES.POS_STAFF,
-      ROLES.KITCHEN_STAFF,
-    ],
+    allowedRoles: [ROLES.RESTAURANT_OWNER, ROLES.MANAGER, ROLES.POS_STAFF],
   },
   {
     label: "Menu Items",
@@ -129,6 +115,19 @@ export const NAV_ITEMS = [
     icon: IconUsers,
     allowedRoles: [ROLES.SUPER_ADMIN, ROLES.PLATFORM_MANAGER],
   },
+  // {
+  //   label: "KOT Info",
+  //   path: APP_PATHS.KOT,
+  //   icon: IconNotebook,
+  //   allowedRoles: [
+  //     ROLES.SUPER_ADMIN,
+  //     ROLES.PLATFORM_MANAGER,
+  //     ROLES.RESTAURANT_OWNER,
+  //     ROLES.MANAGER,
+  //     ROLES.POS_STAFF,
+  //     ROLES.KITCHEN_STAFF,
+  //   ],
+  // },
 ]
 
 export const STATUS_STYLES = {

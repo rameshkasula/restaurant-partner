@@ -36,4 +36,5 @@ export const APP_PATHS = {
   SIGNUP: "/signup",
   SIGNUP_SUCCESS: "/signup-success",
   ORDER_DETAIL: "/orders/:id",
+  KOT: "/kot",
 }
