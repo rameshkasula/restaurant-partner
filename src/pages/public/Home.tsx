@@ -34,7 +34,6 @@ import {
   IconX,
   IconSun,
   IconMoon,
-  IconArrowRight,
   IconStar,
   IconCheck,
   IconBrandSpeedtest,
@@ -46,7 +45,6 @@ import {
   IconDeviceMobile,
   IconRocket,
   IconQuote,
-  IconCircleCheckFilled,
 } from "@tabler/icons-react"
 
 import { useTheme } from "@/components/theme-provider"
@@ -742,128 +740,6 @@ function EarlyAccess() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PRICING
-// ═══════════════════════════════════════════════════════════════════════════
-
-const PLANS = [
-  {
-    name: "Starter",
-    tagline: "Perfect for single-outlet restaurants.",
-    price: "₹1,999",
-    period: "/month",
-    features: [
-      "1 outlet",
-      "Live order tracking",
-      "Digital menu (up to 50 items)",
-      "Basic analytics",
-      "Email support",
-    ],
-    cta: "Start Free Trial",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    tagline: "Built for multi-outlet & growing brands.",
-    price: "₹4,999",
-    period: "/month",
-    features: [
-      "Unlimited outlets",
-      "Advanced analytics & exports",
-      "Staff management & scheduling",
-      "Online ordering system",
-      "Payment gateway integration",
-      "Priority 24/7 support",
-    ],
-    cta: "Get Started Free",
-    highlighted: true,
-  },
-]
-
-function Pricing() {
-  return (
-    <section id="pricing" className="bg-muted/20 px-4 py-24 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-16 max-w-2xl text-center">
-          <Badge variant="outline" className="mb-4">
-            Transparent Pricing
-          </Badge>
-          <h2 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            Simple Plans, No Surprises
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            14-day free trial on all plans. No credit card required to get
-            started.
-          </p>
-        </div>
-
-        <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
-          {PLANS.map(
-            ({ name, tagline, price, period, features, cta, highlighted }) => (
-              <Card
-                key={name}
-                className={cn(
-                  "relative flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
-                  highlighted &&
-                    "shadow-lg ring-2 shadow-primary/10 ring-primary"
-                )}
-              >
-                {highlighted && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <Badge className="px-4 py-1 text-[11px] tracking-wider uppercase shadow-md shadow-primary/30">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold">{name}</CardTitle>
-                  <CardDescription>{tagline}</CardDescription>
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-foreground">
-                      {price}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {period}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="flex flex-col gap-2.5">
-                    {features.map((f) => (
-                      <li
-                        key={f}
-                        className="flex items-center gap-2.5 text-sm text-foreground"
-                      >
-                        <IconCircleCheckFilled className="size-4 shrink-0 text-primary" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Link to="/register" className="w-full">
-                    <Button
-                      variant={highlighted ? "default" : "outline"}
-                      className="w-full gap-1.5"
-                    >
-                      {cta}
-                      <IconArrowRight className="size-3.5" />
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            )
-          )}
-        </div>
-
-        <p className="mt-8 text-center text-xs text-muted-foreground">
-          All plans include a 14-day free trial · Cancel anytime · No setup fees
-        </p>
-      </div>
-    </section>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // CTA BANNER
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1044,7 +920,6 @@ export default function Home() {
         <Features />
         <HowItWorks />
         <EarlyAccess />
-        <Pricing />
         <CTABanner />
       </main>
       <Footer />
