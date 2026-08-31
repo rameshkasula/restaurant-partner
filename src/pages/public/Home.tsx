@@ -91,7 +91,7 @@ function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">
-          {NAV_LINKS.map((link) => (
+          {NAV_LINKS.map((link) =>
             link.href.startsWith("#") ? (
               <a
                 key={link.label}
@@ -109,7 +109,7 @@ function Navbar() {
                 {link.label}
               </Link>
             )
-          ))}
+          )}
         </nav>
 
         {/* Desktop actions */}
@@ -211,7 +211,6 @@ function Navbar() {
     </header>
   )
 }
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HERO
@@ -780,7 +779,7 @@ function CTABanner() {
                 Ready to Run Your Restaurant Smarter?
               </h2>
               <p className="mt-4 text-base text-white/80">
-                Join our early access program — free for the first 3 months, no
+                Join our early access program — free for the first 14 days, no
                 credit card needed.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
@@ -804,7 +803,7 @@ function CTABanner() {
                 </Link>
               </div>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-white/70">
-                {["Free for 3 months", "No credit card", "Cancel anytime"].map(
+                {["Free for 14 days", "No credit card", "Cancel anytime"].map(
                   (t) => (
                     <span key={t} className="flex items-center gap-1.5">
                       <IconCheck className="size-3.5" stroke={2.5} />
